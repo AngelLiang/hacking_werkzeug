@@ -443,6 +443,9 @@ class SharedDataMiddleware(object):
     """A WSGI middleware that provides static content for development
     environments or simple server setups. Usage is quite simple::
 
+    一个为开发环境或单一服务配置提供静态内容的WSGI中间件
+    类似于使用nginx配置静态内容服务器？
+
         import os
         from werkzeug.wsgi import SharedDataMiddleware
 
@@ -646,6 +649,9 @@ class DispatcherMiddleware(object):
             '/app2':        app2,
             '/app3':        app3
         })
+
+    调度中间件，可以把多个app放在不同的url下，合并成一个app
+
     """
 
     def __init__(self, app, mounts=None):
@@ -1062,6 +1068,8 @@ class LimitedStream(io.IOBase):
     The limit however must never be higher than what the stream can
     output.  Otherwise :meth:`readlines` will try to read past the
     limit.
+
+    包装一个stream，这样它不能读取超过n字节的数据。
 
     .. admonition:: Note on WSGI compliance
 

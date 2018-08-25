@@ -19,6 +19,23 @@
 
     :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+
+笔记：
+    请求和响应分别由几个类进行处理，首先
+
+        - BaseRequest：基本请求类。
+
+    然后是有各种混合类：
+        - AcceptMixin
+        - ETagRequestMixin
+        - UserAgentMixin
+        - AuthorizationMixin
+        - CommonRequetDescriptions
+    
+    BaseRequest类和以上混合类组合成 Request
+
+    响应类同理。
+
 """
 from functools import update_wrapper
 from datetime import datetime, timedelta
@@ -476,6 +493,8 @@ class BaseRequest(object):
         """This reads the buffered incoming data from the client into one
         bytestring.  By default this is cached but that behavior can be
         changed by setting `cache` to `False`.
+
+        这个是读取来自客户端缓存区进来的数据，放到一个 bytestring 里。
 
         Usually it's a bad idea to call this method without checking the
         content length first as a client could send dozens of megabytes or more
@@ -1322,6 +1341,8 @@ class AcceptMixin(object):
     to get all the HTTP accept headers as
     :class:`~werkzeug.datastructures.Accept` objects (or subclasses
     thereof).
+
+    accept头部处理的的混合类
     """
 
     @cached_property
@@ -1365,6 +1386,8 @@ class ETagRequestMixin(object):
     """Add entity tag and cache descriptors to a request object or object with
     a WSGI environment available as :attr:`~BaseRequest.environ`.  This not
     only provides access to etags but also to the cache control header.
+
+    etag请求的混合类
     """
 
     @cached_property
@@ -1442,6 +1465,8 @@ class AuthorizationMixin(object):
     """Adds an :attr:`authorization` property that represents the parsed
     value of the `Authorization` header as
     :class:`~werkzeug.datastructures.Authorization` object.
+
+    有关认证的混合类
     """
 
     @cached_property
@@ -1984,11 +2009,13 @@ class Request(BaseRequest, AcceptMixin, ETagRequestMixin,
 
     """Full featured request object implementing the following mixins:
 
-    - :class:`AcceptMixin` for accept header parsing
-    - :class:`ETagRequestMixin` for etag and cache control handling
-    - :class:`UserAgentMixin` for user agent introspection
-    - :class:`AuthorizationMixin` for http auth handling
-    - :class:`CommonRequestDescriptorsMixin` for common headers
+    请求类
+
+    - :class:`AcceptMixin` for accept header parsing                    用于接收请求头的解析
+    - :class:`ETagRequestMixin` for etag and cache control handling     用于etag和缓存控制的处理
+    - :class:`UserAgentMixin` for user agent introspection              用于user agent
+    - :class:`AuthorizationMixin` for http auth handling                用于http auth 处理
+    - :class:`CommonRequestDescriptorsMixin` for common headers         用于常规的headers
     """
 
 

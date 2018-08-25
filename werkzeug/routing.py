@@ -94,6 +94,32 @@
 
     :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+
+
+笔记：
+    function:
+        - _pythonize(value)
+        - parse_converter_args(argstr)
+        - parse_rule(rule)
+    Rule: 
+        - class RuleTemplate(object)
+        - class RuleTemplateFactory(RuleFactory)
+        - class Rule(RuleFactory)
+    
+        - class Subdomain(RuleFactory)
+        - class Submount(RuleFactory)
+    Converter:
+        - class BaseConverter(object)
+        - class UnicodeConverter(BaseConverter)
+        - class AnyConverter(BaseConverter)
+        - class PathConverter(BaseConverter)
+        - class NumberConverter(BaseConverter)
+        - class IntegerConverter(NumberConverter)
+        - class FloatConverter(NumberConverter)
+        - class UUIDConverter(BaseConverter)
+    Map:
+        - class Map(object)
+        - class MapAdapter(object)
 """
 import difflib
 import re
@@ -114,29 +140,43 @@ from werkzeug._compat import itervalues, iteritems, to_unicode, to_bytes, \
 from werkzeug.datastructures import ImmutableDict, MultiDict
 from werkzeug.utils import cached_property
 
+# 正则表达式匹配URL
+# () - 标记一个子表达式的开始和结束位置。
+# ^ - 匹配输入字符串的开始位置。
+# ? - 匹配前面的子表达式零次或一次，或指明一个非贪婪限定符。
+# * - 匹配前面的子表达式零次或多次
+# \s - 匹配任何空白字符。
+# \w - 匹配字母或数字或下划线或汉字 等价于 '[^A-Za-z0-9_]'。
+# \d - 匹配数字
 
+# (?:...) - 一个正则括号的不捕获版本
+# (?P<name>...) - 和正则括号相似, 但是这个组匹配到的子字符串可以通过符号组名称 name 进行访问。
+
+### 以下是构建*动态路由*的正则表达式
+# [^<]* - 开头0~1个尖括号的0+字符串
 _rule_re = re.compile(r'''
     (?P<static>[^<]*)                           # static rule data
     <
     (?:
         (?P<converter>[a-zA-Z_][a-zA-Z0-9_]*)   # converter name
-        (?:\((?P<args>.*?)\))?                  # converter arguments
+        (?:\((?P<args>.*?)\))?                  # converter arguments, example: `(leangth)` ， args=length
         \:                                      # variable delimiter
     )?
     (?P<variable>[a-zA-Z_][a-zA-Z0-9_]*)        # variable name
     >
-''', re.VERBOSE)
+''', re.VERBOSE)    # re.VERBOSE - 允许在视觉上分离模式的逻辑部分并添加注释
 _simple_rule_re = re.compile(r'<([^>]+)>')
+# 类型转换器匹配
 _converter_args_re = re.compile(r'''
-    ((?P<name>\w+)\s*=\s*)?
-    (?P<value>
-        True|False|
-        \d+.\d+|
-        \d+.|
-        \d+|
-        \w+|
-        [urUR]?(?P<stringval>"[^"]*?"|'[^']*')
-    )\s*,
+    ((?P<name>\w+)\s*=\s*)?     # example: `string=`，string赋值给name
+    (?P<value>      # 设置默认值？
+        True|False| # Boolean
+        \d+.\d+|    # float
+        \d+.|       # float
+        \d+|        # number
+        \w+|        # string
+        [urUR]?(?P<stringval>"[^"]*?"|'[^']*')  # example: `UR'string'`
+    )\s*,           # 注意末尾有个逗号
 ''', re.VERBOSE | re.UNICODE)
 
 
@@ -161,20 +201,27 @@ def _pythonize(value):
 
 
 def parse_converter_args(argstr):
+    """
+    解析类型转换器参数
+    """
     argstr += ','
     args = []
     kwargs = {}
 
+    # re.finditer() - 从左到右扫描，返回非重叠匹配 match 对象的生成器
     for item in _converter_args_re.finditer(argstr):
+        # match.group([group1, ...])
+        # 返回匹配的一个或多个子组。如果有一个参数，结果是一个单一的字符串；
+        # 如果有多个参数，则结果是每个参数有一个项目的元组。
         value = item.group('stringval')
         if value is None:
             value = item.group('value')
         value = _pythonize(value)
         if not item.group('name'):
-            args.append(value)
+            args.append(value)  # 表示这是一个 args 
         else:
             name = item.group('name')
-            kwargs[name] = value
+            kwargs[name] = value    # 获取 kwargs 
 
     return tuple(args), kwargs
 
@@ -184,31 +231,41 @@ def parse_rule(rule):
     in the form ``(converter, arguments, variable)``. If the converter is
     `None` it's a static url part, otherwise it's a dynamic one.
 
+    解析 rule 并作为生成器返回它。
+    每一个 iteration 生成 (converter, arguments, variable) 格式的tuples。
+    如果 converter 是 None，它是一个静态 url 部分，否则是一个动态。
+
     :internal:
+
+    :return: converter, args, static
+        converter - 类型转换器
+        args - 为传给转换器的参数
+        static - 静态URL
     """
     pos = 0
     end = len(rule)
     do_match = _rule_re.match
     used_names = set()
     while pos < end:
-        m = do_match(rule, pos)
+        m = do_match(rule, pos) # 创造一个 match 对象，从 pos 开始匹配
         if m is None:
             break
-        data = m.groupdict()
+        # re.groupdict - 返回以有别名的组的别名为键、以该组截获的子串为值的字典，没有别名的组不包含在内。
+        data = m.groupdict()    # 提取字段
         if data['static']:
-            yield None, None, data['static']
-        variable = data['variable']
-        converter = data['converter'] or 'default'
+            yield None, None, data['static']        # first return
+        variable = data['variable'] # 获取变量值
+        converter = data['converter'] or 'default'  # 获取转换器
         if variable in used_names:
             raise ValueError('variable name %r used twice.' % variable)
         used_names.add(variable)
-        yield converter, data['args'] or None, variable
+        yield converter, data['args'] or None, variable # second return
         pos = m.end()
     if pos < end:
         remaining = rule[pos:]
         if '>' in remaining or '<' in remaining:
             raise ValueError('malformed url rule: %r' % rule)
-        yield None, None, remaining
+        yield None, None, remaining                # third return
 
 
 class RoutingException(Exception):
@@ -322,6 +379,8 @@ class RuleFactory(object):
     """As soon as you have more complex URL setups it's a good idea to use rule
     factories to avoid repetitive tasks.  Some of them are builtin, others can
     be added by subclassing `RuleFactory` and overriding `get_rules`.
+
+    当你有很多复杂的 URL 体制，使用 rule 工厂模式去避免重复的任务是一个很好的主意。
     """
 
     def get_rules(self, map):
@@ -558,6 +617,8 @@ class Rule(RuleFactory):
         that can be build. This is useful if you have resources on a subdomain
         or folder that are not handled by the WSGI application (like static data)
 
+        这个设置为 True 则 rule 将不会匹配但会创建一个可build的URL
+
     `redirect_to`
         If given this must be either a string or callable.  In case of a
         callable it's called with the url adapter that triggered the match and
@@ -674,6 +735,8 @@ class Rule(RuleFactory):
         """Bind the url to a map and create a regular expression based on
         the information from the rule itself and the defaults from the map.
 
+        绑定 URL 到 self.map ，并根据来自rule的信息创建正则规则
+
         :internal:
         """
         if self.map is not None and not rebind:
@@ -684,7 +747,7 @@ class Rule(RuleFactory):
             self.strict_slashes = map.strict_slashes
         if self.subdomain is None:
             self.subdomain = map.default_subdomain
-        self.compile()
+        self.compile()  # 编译
 
     def get_converter(self, variable_name, converter_name, args, kwargs):
         """Looks up the converter for the given parameter.
@@ -696,7 +759,9 @@ class Rule(RuleFactory):
         return self.map.converters[converter_name](self.map, *args, **kwargs)
 
     def compile(self):
-        """Compiles the regular expression and stores it."""
+        """Compiles the regular expression and stores it.
+        编译正则规则并保存
+        """
         assert self.map is not None, 'rule not bound'
 
         if self.map.host_matching:
@@ -704,30 +769,36 @@ class Rule(RuleFactory):
         else:
             domain_rule = self.subdomain or ''
 
-        self._trace = []
-        self._converters = {}
-        self._weights = []
+        self._trace = []    # 路径 item: (Boolean, data) Boolean表示是否是动态路由
+        self._converters = {}   # 类型转换器
+        self._weights = []  # 权重 item: (int, int)
         regex_parts = []
 
         def _build_regex(rule):
+            """构建正则"""
+            # parse_rule，生成器，解析 rule ，并返回元组
+            # 下面先判断 返回的第一个返回值 converter ， 如果为 None 则表示静态路由
             for converter, arguments, variable in parse_rule(rule):
-                if converter is None:
+                if converter is None:   # 表示 static url
+                    # re.escape(string) - 在模式中转义除ASCII字母，数字和'_'之外的所有字符。
                     regex_parts.append(re.escape(variable))
-                    self._trace.append((False, variable))
+                    self._trace.append((False, variable))   # 没有变量
                     for part in variable.split('/'):
                         if part:
                             self._weights.append((0, -len(part)))
                 else:
                     if arguments:
+                        # 传递 parse_rule 返回的第二个返回值给 parse_converter_args()
                         c_args, c_kwargs = parse_converter_args(arguments)
                     else:
                         c_args = ()
                         c_kwargs = {}
+                    # 获取转换器
                     convobj = self.get_converter(
                         variable, converter, c_args, c_kwargs)
                     regex_parts.append('(?P<%s>%s)' % (variable, convobj.regex))
                     self._converters[variable] = convobj
-                    self._trace.append((True, variable))
+                    self._trace.append((True, variable))    # 有变量
                     self._weights.append((1, convobj.weight))
                     self.arguments.add(str(variable))
 
@@ -738,7 +809,7 @@ class Rule(RuleFactory):
         if not self.is_leaf:
             self._trace.append((False, '/'))
 
-        if self.build_only:
+        if self.build_only: # 如果只是 build ，则到这里就返回
             return
         regex = r'^%s%s$' % (
             u''.join(regex_parts),
@@ -753,6 +824,8 @@ class Rule(RuleFactory):
         the map is doing host matching the subdomain part will be the host
         instead.
 
+        检查 rule 是否匹配所给的路径（path）。
+
         If the rule matches a dict with the converted values is returned,
         otherwise the return value is `None`.
 
@@ -761,7 +834,7 @@ class Rule(RuleFactory):
         if not self.build_only:
             m = self._regex.search(path)
             if m is not None:
-                groups = m.groupdict()
+                groups = m.groupdict()  # 获取字段
                 # we have a folder like part of the url without a trailing
                 # slash and strict slashes enabled. raise an exception that
                 # tells the map to redirect to the same url but with a
@@ -800,6 +873,8 @@ class Rule(RuleFactory):
         tmp = []
         add = tmp.append
         processed = set(self.arguments)
+
+        # self._trace 保存了一组 (Boolean, data) 的list
         for is_dynamic, data in self._trace:
             if is_dynamic:
                 try:
@@ -807,8 +882,10 @@ class Rule(RuleFactory):
                 except ValidationError:
                     return
                 processed.add(data)
-            else:
+            else:   # 非动态路由
                 add(url_quote(to_bytes(data, self.map.charset), safe='/:|+'))
+        
+        # 组合 tmp 并区分 domain 和 url 部分
         domain_part, url = (u''.join(tmp)).split(u'|', 1)
 
         if append_unknown:
@@ -816,12 +893,13 @@ class Rule(RuleFactory):
             for key in processed:
                 if key in query_vars:
                     del query_vars[key]
-
+            
+            # 添加 query string 到 url 后面
             if query_vars:
                 url += u'?' + url_encode(query_vars, charset=self.map.charset,
                                          sort=self.map.sort_parameters,
                                          key=self.map.sort_key)
-
+        # 返回 domain 和 url 
         return domain_part, url
 
     def provides_defaults_for(self, rule):
@@ -1108,10 +1186,14 @@ class Map(object):
     and can be overridden for each rule.  Note that you have to specify all
     arguments besides the `rules` as keyword arguments!
 
+    map 类保存所有 URL 规则和一些配置参数。
+
     :param rules: sequence of url rules for this map.
+                  这个map的rul规则序列
     :param default_subdomain: The default subdomain for rules without a
                               subdomain defined.
     :param charset: charset of the url. defaults to ``"utf-8"``
+                    默认编码是utf-8
     :param strict_slashes: Take care of trailing slashes.
     :param redirect_defaults: This will redirect to the default rule if it
                               wasn't visited that way. This helps creating
@@ -1121,6 +1203,7 @@ class Map(object):
                        converter this will override the original one.
     :param sort_parameters: If set to `True` the url parameters are sorted.
                             See `url_encode` for more details.
+                            如果设置为 `True`，URL参数会排序
     :param sort_key: The sort key function for `url_encode`.
     :param encoding_errors: the error method to use for decoding
     :param host_matching: if set to `True` it enables the host matching
@@ -1218,6 +1301,8 @@ class Map(object):
         because the HTTP RFC requires absolute URLs for redirects and so all
         redirect exceptions raised by Werkzeug will contain the full canonical
         URL.
+
+
 
         If no path_info is passed to :meth:`match` it will use the default path
         info passed to bind.  While this doesn't really make sense for
@@ -1525,7 +1610,7 @@ class MapAdapter(object):
         )
 
         have_match_for = set()
-        for rule in self.map._rules:
+        for rule in self.map._rules:    # for 循环匹配 URL 
             try:
                 rv = rule.match(path, method)
             except RequestSlash:
@@ -1535,12 +1620,16 @@ class MapAdapter(object):
             except RequestAliasRedirect as e:
                 raise RequestRedirect(self.make_alias_redirect_url(
                     path, rule.endpoint, e.matched_values, method, query_args))
-            if rv is None:
+            
+            if rv is None:  # 如果为空则 continue 
                 continue
+            
+            # method
             if rule.methods is not None and method not in rule.methods:
                 have_match_for.update(rule.methods)
                 continue
-
+            
+            # redirect
             if self.map.redirect_defaults:
                 redirect_url = self.get_default_redirect(rule, method, rv,
                                                          query_args)
@@ -1567,7 +1656,7 @@ class MapAdapter(object):
                 return rule, rv
             else:
                 return rule.endpoint, rv
-
+        # 匹配完成之后在判断 method 异常
         if have_match_for:
             raise MethodNotAllowed(valid_methods=list(have_match_for))
         raise NotFound()
@@ -1696,6 +1785,8 @@ class MapAdapter(object):
         `match` you call `build` and pass it the endpoint and a dict of
         arguments for the placeholders.
 
+        构建 URL
+
         The `build` function also accepts an argument called `force_external`
         which, if you set it to `True` will force external URLs. Per default
         external URLs (include the server name) will only be used if the
@@ -1720,6 +1811,8 @@ class MapAdapter(object):
 
         Additional values are converted to unicode and appended to the URL as
         URL querystring parameters:
+
+        额外的values会转换成unicode并附加到 URL 作为 querystring 参数。
 
         >>> urls.build("index", {'q': 'My Searchstring'})
         '/?q=My+Searchstring'
@@ -1776,6 +1869,8 @@ class MapAdapter(object):
             (not self.map.host_matching and domain_part == self.subdomain)
         ):
             return str(url_join(self.script_name, './' + path.lstrip('/')))
+        # 返回完整的 URL
+        # [scheme]://[host]:[port]/[path]
         return str('%s//%s%s/%s' % (
             self.url_scheme + ':' if self.url_scheme else '',
             host,

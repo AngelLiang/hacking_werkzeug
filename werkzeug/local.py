@@ -52,6 +52,11 @@ class Local(object):
     __slots__ = ('__storage__', '__ident_func__')
 
     def __init__(self):
+        """
+        数据保存在 __storage__ 中，后续访问都是对该属性的操作。
+        这里一定要用 object 来调用，因为用 self 调用的就会触发 __setattr__ 方法，
+        __setattr__ 方法里又会用 self 去赋值就又会调用 __setattr__ 方法，就变成递归了。
+        """
         object.__setattr__(self, '__storage__', {})
         object.__setattr__(self, '__ident_func__', get_ident)
 
@@ -63,8 +68,13 @@ class Local(object):
         return LocalProxy(self, proxy)
 
     def __release_local__(self):
+        """清空当前线程/协程保存的所有数据"""
         self.__storage__.pop(self.__ident_func__(), None)
 
+    # 下面三个方法实现了属性的访问、设置和删除。
+    # 注意到，内部都调用 `self.__ident_func__` 获取当前线程或者协程的 id，然后再访问对应的内部字典。
+    # 如果访问或者删除的属性不存在，会抛出 AttributeError。
+    # 这样，外部用户看到的就是它在访问实例的属性，完全不知道字典或者多线程/协程切换的实现
     def __getattr__(self, name):
         try:
             return self.__storage__[self.__ident_func__()][name]
@@ -112,12 +122,16 @@ class LocalStack(object):
     the topmost item on the stack.
 
     .. versionadded:: 0.6.1
+
+    LocalStack 是基于 Local 实现的栈结构。
+    如果说 Local 提供了多线程或者多协程隔离的属性访问，那么 LocalStack 就提供了隔离的栈访问。
     """
 
     def __init__(self):
         self._local = Local()
 
     def __release_local__(self):
+        """"清空当前线程或者协程的栈数据"""
         self._local.__release_local__()
 
     def _get__ident_func__(self):
@@ -129,6 +143,7 @@ class LocalStack(object):
     del _get__ident_func__, _set__ident_func__
 
     def __call__(self):
+        """返回当前线程或者协程栈顶元素的代理对象"""
         def _lookup():
             rv = self.top
             if rv is None:
@@ -136,6 +151,7 @@ class LocalStack(object):
             return rv
         return LocalProxy(_lookup)
 
+    # 由以下代码可知，stack是使用 list 来实现的，只不过对其进行了 thread local 封装。
     def push(self, obj):
         """Pushes a new item to the stack"""
         rv = getattr(self._local, 'stack', None)
@@ -152,7 +168,7 @@ class LocalStack(object):
         if stack is None:
             return None
         elif len(stack) == 1:
-            release_local(self._local)
+            release_local(self._local)  # 释放内存
             return stack[-1]
         else:
             return stack.pop()

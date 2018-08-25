@@ -168,6 +168,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         url_scheme = self.server.ssl_context is None and 'http' or 'https'
         path_info = url_unquote(request_url.path)
 
+        # wsgi的环境变量
         environ = {
             'wsgi.version':         (1, 0),
             'wsgi.url_scheme':      url_scheme,
@@ -252,7 +253,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             return write
 
         def execute(app):
-            application_iter = app(environ, start_response)
+            application_iter = app(environ, start_response) # create app，并传入 environ 和 start_response 函数
             try:
                 for data in application_iter:
                     write(data)
@@ -543,13 +544,18 @@ def select_ip_version(host, port):
 
 class BaseWSGIServer(HTTPServer, object):
 
-    """Simple single-threaded, single-process WSGI server."""
-    multithread = False
-    multiprocess = False
+    """Simple single-threaded, single-process WSGI server.
+    
+    继承了 HTTPServer 并覆写了一些方法
+    """
+    multithread = False     # 多线程
+    multiprocess = False    # 多进程
     request_queue_size = LISTEN_QUEUE
 
     def __init__(self, host, port, app, handler=None,
                  passthrough_errors=False, ssl_context=None, fd=None):
+
+        # wsgi请求处理
         if handler is None:
             handler = WSGIRequestHandler
 
@@ -589,12 +595,13 @@ class BaseWSGIServer(HTTPServer, object):
             self.ssl_context = None
 
     def log(self, type, message, *args):
+        """日志"""
         _log(type, message, *args)
 
     def serve_forever(self):
         self.shutdown_signal = False
         try:
-            HTTPServer.serve_forever(self)
+            HTTPServer.serve_forever(self)  # 使用了 HTTPServer 启动服务
         except KeyboardInterrupt:
             pass
         finally:
@@ -606,6 +613,9 @@ class BaseWSGIServer(HTTPServer, object):
         return HTTPServer.handle_error(self, request, client_address)
 
     def get_request(self):
+        """overwrite?
+        获取请求
+        """
         con, info = self.socket.accept()
         return con, info
 
@@ -739,6 +749,9 @@ def run_simple(hostname, port, application, use_reloader=False,
         application = SharedDataMiddleware(application, static_files)
 
     def log_startup(sock):
+        """
+        启动日志
+        """
         display_hostname = hostname not in ('', '*') and hostname or 'localhost'
         if ':' in display_hostname:
             display_hostname = '[%s]' % display_hostname
