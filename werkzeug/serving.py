@@ -822,7 +822,7 @@ def run_simple(hostname, port, application, use_reloader=False,
             # reuse this one and our socket will survive the restarts.
             if can_open_by_fd:
                 os.environ['WERKZEUG_SERVER_FD'] = str(s.fileno())
-                s.listen(LISTEN_QUEUE)
+                s.listen(LISTEN_QUEUE)  # LISTEN_QUEUE = 128
                 log_startup(s)  # 打印日志
             else:
                 s.close()
