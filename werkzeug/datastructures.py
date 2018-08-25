@@ -7,6 +7,17 @@
 
     :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+
+笔记：
+    有关数据结构的源码
+
+    - class ImmutableDict：
+        不可变的字典
+    - class ImmutableMultiDict：
+        不可变的多key字典
+        主要用于 flask.request.args 等
+    - class ImmutableOrderedMultiDict：
+        不可变的有序多key字典
 """
 import re
 import codecs
@@ -26,6 +37,7 @@ _locale_delim_re = re.compile(r'[_-]')
 
 
 def is_immutable(self):
+    """不可变的"""
     raise TypeError('%r objects are immutable' % self.__class__.__name__)
 
 
@@ -78,6 +90,8 @@ def native_itermethods(names):
 class ImmutableListMixin(object):
 
     """Makes a :class:`list` immutable.
+    
+    不可变队列混合类
 
     .. versionadded:: 0.5
 
@@ -107,7 +121,7 @@ class ImmutableListMixin(object):
 
     def append(self, item):
         is_immutable(self)
-    remove = append
+    remove = append # remove方法和append一样
 
     def extend(self, iterable):
         is_immutable(self)
@@ -129,6 +143,8 @@ class ImmutableList(ImmutableListMixin, list):
 
     """An immutable :class:`list`.
 
+    不可变队列
+
     .. versionadded:: 0.5
 
     :private:
@@ -144,6 +160,8 @@ class ImmutableList(ImmutableListMixin, list):
 class ImmutableDictMixin(object):
 
     """Makes a :class:`dict` immutable.
+
+    不可变字典混合类
 
     .. versionadded:: 0.5
 
@@ -314,6 +332,8 @@ class ImmutableTypeConversionDict(ImmutableDictMixin, TypeConversionDict):
     """Works like a :class:`TypeConversionDict` but does not support
     modifications.
 
+    不可变的有类型转换的字典
+
     .. versionadded:: 0.5
     """
 
@@ -325,6 +345,9 @@ class ImmutableTypeConversionDict(ImmutableDictMixin, TypeConversionDict):
         return TypeConversionDict(self)
 
     def __copy__(self):
+        """
+        call in `copy(instance)`
+        """
         return self
 
 
@@ -354,6 +377,8 @@ class MultiDict(TypeConversionDict):
     multiple values for the same key which is for example used by the parsing
     functions in the wrappers.  This is necessary because some HTML form
     elements pass multiple values for the same key.
+
+    客制化一个能处理多值的相同key的字典。
 
     :class:`MultiDict` implements all standard dictionary methods.
     Internally, it saves all values for a key as a list, but the standard dict
