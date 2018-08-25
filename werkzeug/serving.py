@@ -34,6 +34,22 @@
 
     :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+
+笔记：
+    提供server的模块，主要包括
+
+    - class WSGIRequestHandler(BaseHTTPRequestHandler, object)
+        WSGI请求处理对象类
+    - class BaseWSGIServer(HTTPServer, object)
+        基本WSGI服务器
+    - class ThreadedWSGIServer(ThreadingMixIn, BaseWSGIServer)
+        线程WSGI服务器
+    - class ForkingWSGIServer(ForkingMixIn, BaseWSGIServer)
+        进程WSGI服务器
+
+    - def run_simple()
+        服务启动函数
+
 """
 from __future__ import with_statement
 
@@ -43,7 +59,7 @@ import socket
 import sys
 import signal
 
-
+# 判断os是否可以fork
 can_fork = hasattr(os, "fork")
 
 
