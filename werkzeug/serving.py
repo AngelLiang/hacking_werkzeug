@@ -755,18 +755,21 @@ def run_simple(hostname, port, application, use_reloader=False,
                         the server should automatically create one, or ``None``
                         to disable SSL (which is the default).
     """
+    # 检查port
     if not isinstance(port, int):
         raise TypeError('port must be an integer')
+    # 使用调试器
     if use_debugger:
         from werkzeug.debug import DebuggedApplication
         application = DebuggedApplication(application, use_evalex)
+    # 静态文件
     if static_files:
         from werkzeug.wsgi import SharedDataMiddleware
         application = SharedDataMiddleware(application, static_files)
 
     def log_startup(sock):
         """
-        启动日志
+        日志打印
         """
         display_hostname = hostname not in ('', '*') and hostname or 'localhost'
         if ':' in display_hostname:
@@ -778,17 +781,22 @@ def run_simple(hostname, port, application, use_reloader=False,
              display_hostname, port, quit_msg)
 
     def inner():
+        """内部启动"""
         try:
+            # 获取socket文件描述符
             fd = int(os.environ['WERKZEUG_SERVER_FD'])
         except (LookupError, ValueError):
             fd = None
+
+        # make_server return`ThreadedWSGIServer` or
+        # `ForkingWSGIServer` or `BaseWSGIServer`
         srv = make_server(hostname, port, application, threaded,
                           processes, request_handler,
                           passthrough_errors, ssl_context,
                           fd=fd)
         if fd is None:
             log_startup(srv.socket)
-        srv.serve_forever()
+        srv.serve_forever() # serve_forever() is from BaseWSGIServer
 
     if use_reloader:
         # If we're not running already in the subprocess that is the
@@ -815,7 +823,7 @@ def run_simple(hostname, port, application, use_reloader=False,
             if can_open_by_fd:
                 os.environ['WERKZEUG_SERVER_FD'] = str(s.fileno())
                 s.listen(LISTEN_QUEUE)
-                log_startup(s)
+                log_startup(s)  # 打印日志
             else:
                 s.close()
 

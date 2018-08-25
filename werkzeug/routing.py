@@ -120,6 +120,26 @@
     Map:
         - class Map(object)
         - class MapAdapter(object)
+
+路由示例：
+
+```
+    self.url_map = Map([
+        Rule('/', endpoint='new_url'),
+        Rule('/<short_id>', endpoint='follow_short_link'),
+        Rule('/<short_id>+', endpoint='short_link_details')
+    ])
+
+    # 调度
+    def dispatch_request(self, request):
+        adapter = self.url_map.bind_to_environ(request.environ)
+        try:
+            endpoint, values = adapter.match()
+            return getattr(self, 'on_' + endpoint)(request, **values)
+        except HTTPException, e:
+            return e
+```
+
 """
 import difflib
 import re
