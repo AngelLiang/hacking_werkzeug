@@ -55,6 +55,25 @@
 
     :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+
+笔记：
+    werkzeug的缓存，主要提供：
+
+    - class BaseCache(object)
+        基本缓存类
+    - class NullCache(BaseCache)
+        Null缓存
+    - class SimpleCache(BaseCache)
+        简单缓存
+    - class MemcachedCache(BaseCache)
+        Memcached缓存
+    - class RedisCache(BaseCache)
+        Redis缓存
+    - class FileSystemCache
+        文件缓存
+    - class UWSGICache(BaseCache)
+        uwsgi缓存
+
 """
 import os
 import re
@@ -275,9 +294,14 @@ class SimpleCache(BaseCache):
 
     :param threshold: the maximum number of items the cache stores before
                       it starts deleting some.
+                      
+                      最多缓存的item个数，默认500个。
+
     :param default_timeout: the default timeout that is used if no timeout is
                             specified on :meth:`~BaseCache.set`. A timeout of
                             0 indicates that the cache never expires.
+
+                            如果没有设置timeout，那么这个就是缓存timeout，默认为300
     """
 
     def __init__(self, threshold=500, default_timeout=300):

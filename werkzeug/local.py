@@ -74,7 +74,7 @@ class Local(object):
     # 下面三个方法实现了属性的访问、设置和删除。
     # 注意到，内部都调用 `self.__ident_func__` 获取当前线程或者协程的 id，然后再访问对应的内部字典。
     # 如果访问或者删除的属性不存在，会抛出 AttributeError。
-    # 这样，外部用户看到的就是它在访问实例的属性，完全不知道字典或者多线程/协程切换的实现
+    # 这样，外部用户看到的就是它在访问实例的属性，完全不知道字典或者多线程/协程切换的实现。
     def __getattr__(self, name):
         try:
             return self.__storage__[self.__ident_func__()][name]
