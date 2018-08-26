@@ -40,10 +40,14 @@
 
     - class WSGIRequestHandler(BaseHTTPRequestHandler, object)
         WSGI请求处理对象类
+        https://docs.python.org/3.6/library/http.server.html#http.server.BaseHTTPRequestHandler
+
     - class BaseWSGIServer(HTTPServer, object)
         基本WSGI服务器
+
     - class ThreadedWSGIServer(ThreadingMixIn, BaseWSGIServer)
         线程WSGI服务器
+
     - class ForkingWSGIServer(ForkingMixIn, BaseWSGIServer)
         进程WSGI服务器
 
@@ -562,6 +566,7 @@ class BaseWSGIServer(HTTPServer, object):
 
     """Simple single-threaded, single-process WSGI server.
     
+    基本WSGI服务器
     继承了 HTTPServer 并覆写了一些方法
     """
     multithread = False     # 多线程
@@ -662,6 +667,8 @@ def make_server(host=None, port=None, app=None, threaded=False, processes=1,
                 ssl_context=None, fd=None):
     """Create a new server instance that is either threaded, or forks
     or just processes one request after another.
+
+    创建一个新的服务器实例，线程、进程或基本的三种之一。
     """
     if threaded and processes > 1:
         raise ValueError("cannot have a multithreaded and "
