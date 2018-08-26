@@ -173,10 +173,17 @@ class DechunkedInput(io.RawIOBase):
 
 class WSGIRequestHandler(BaseHTTPRequestHandler, object):
 
-    """A request handler that implements WSGI dispatching."""
+    """A request handler that implements WSGI dispatching.
+    
+    BaseHTTPRequestHandler：
+    https://docs.python.org/3.6/library/http.server.html#http.server.BaseHTTPRequestHandler
+    """
 
     @property
     def server_version(self):
+        """
+        改写 BaseHTTPRequestHandler.server_version
+        """
         return 'Werkzeug/' + werkzeug.__version__
 
     def make_environ(self):
@@ -285,7 +292,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                 application_iter = None
 
         try:
-            execute(self.server.app)
+            execute(self.server.app)    # 传入server.app
         except (socket.error, socket.timeout) as e:
             self.connection_dropped(e, environ)
         except Exception:
@@ -305,7 +312,11 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                             traceback.plaintext)
 
     def handle(self):
-        """Handles a request ignoring dropped connections."""
+        """Handles a request ignoring dropped connections.
+        
+        改写 BaseHTTPRequestHandler.handle() 
+        https://docs.python.org/3.6/library/http.server.html#http.server.BaseHTTPRequestHandler.handle_one_request
+        """
         rv = None
         try:
             rv = BaseHTTPRequestHandler.handle(self)
@@ -338,7 +349,11 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         """
 
     def handle_one_request(self):
-        """Handle a single HTTP request."""
+        """Handle a single HTTP request.
+
+        改写 BaseHTTPRequestHandler.handle_one_request()
+        处理一次HTTP request
+        """
         self.raw_requestline = self.rfile.readline()
         if not self.raw_requestline:
             self.close_connection = 1
@@ -346,7 +361,10 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             return self.run_wsgi()
 
     def send_response(self, code, message=None):
-        """Send the response header and log the response code."""
+        """Send the response header and log the response code.
+        
+        改写 BaseHTTPRequestHandler.send_response()
+        """
         self.log_request(code)
         if message is None:
             message = code in self.responses and self.responses[code][0] or ''
