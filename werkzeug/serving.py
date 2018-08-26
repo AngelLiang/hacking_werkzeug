@@ -153,6 +153,8 @@ def run_simple(hostname, port, application, use_reloader=False,
                extra_files=None, threaded=False, processes=1):
     """
     Start an application using wsgiref and with an optional reloader.
+    
+    使用可选的reloader启动一个wsgiref应用
     """
     def inner():
         srv = make_server(hostname, port, application, threaded,

@@ -208,6 +208,13 @@ class LocalProxy(object):
     Whenever something is bound to l.user / l.request the proxy objects
     will forward all operations.  If no object is bound a `RuntimeError`
     will be raised.
+
+
+    作为werkzeug的本地代理。将所有操作转发到一个代理对象。
+    
+    当任何东西绑定了 l.user/l.request，这个代理对象将转发所有操作。
+    如果没有对象绑定则会抛出一个`RuntimeError`异常。
+
     """
     __slots__ = ('__local', '__dict__', '__name__')
 
