@@ -98,8 +98,10 @@ except ImportError:
     import socketserver
     from http.server import HTTPServer, BaseHTTPRequestHandler
 
+# 线程模型
 ThreadingMixIn = socketserver.ThreadingMixIn
 
+# 进程模型
 if can_fork:
     ForkingMixIn = socketserver.ForkingMixIn
 else:
@@ -176,13 +178,17 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
     """A request handler that implements WSGI dispatching.
     
     BaseHTTPRequestHandler：
-    https://docs.python.org/3.6/library/http.server.html#http.server.BaseHTTPRequestHandler
+    - https://docs.python.org/3.6/library/http.server.html#http.server.BaseHTTPRequestHandler
+    - https://yiyibooks.cn/xx/python_352/library/http.server.html
+
+    self.server：包含服务器实例。
     """
 
     @property
     def server_version(self):
         """
-        改写 BaseHTTPRequestHandler.server_version
+        指定服务器软件版本。
+        覆写了 BaseHTTPRequestHandler.server_version
         """
         return 'Werkzeug/' + werkzeug.__version__
 
@@ -199,7 +205,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         environ = {
             'wsgi.version':         (1, 0),
             'wsgi.url_scheme':      url_scheme,
-            'wsgi.input':           self.rfile,
+            'wsgi.input':           self.rfile, # rfile：包含一个输入流，位于可选输入数据的开头。
             'wsgi.errors':          sys.stderr,
             'wsgi.multithread':     self.server.multithread,
             'wsgi.multiprocess':    self.server.multiprocess,
@@ -254,11 +260,14 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                     self.send_header(key, value)
                     key = key.lower()
                     header_keys.add(key)
+                # 检查 content-length 头部
                 if 'content-length' not in header_keys:
                     self.close_connection = True
                     self.send_header('Connection', 'close')
+                # 检查 server 头部
                 if 'server' not in header_keys:
                     self.send_header('Server', self.version_string())
+                # 检查 date 头部
                 if 'date' not in header_keys:
                     self.send_header('Date', self.date_time_string())
                 self.end_headers()
@@ -292,7 +301,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                 application_iter = None
 
         try:
-            execute(self.server.app)    # 传入server.app
+            execute(self.server.app)    # execute传入server.app执行
         except (socket.error, socket.timeout) as e:
             self.connection_dropped(e, environ)
         except Exception:
@@ -314,12 +323,13 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
     def handle(self):
         """Handles a request ignoring dropped connections.
         
-        改写 BaseHTTPRequestHandler.handle() 
+        调用 handle_one_request() 一次（如果启用持久连接，则多次）以处理传入的HTTP请求。
+        覆写了 BaseHTTPRequestHandler.handle() 
         https://docs.python.org/3.6/library/http.server.html#http.server.BaseHTTPRequestHandler.handle_one_request
         """
         rv = None
         try:
-            rv = BaseHTTPRequestHandler.handle(self)
+            rv = BaseHTTPRequestHandler.handle(self)    # 继续调用 BaseHTTPRequestHandler.handle()
         except (socket.error, socket.timeout) as e:
             self.connection_dropped(e)
         except Exception:
@@ -351,19 +361,20 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
     def handle_one_request(self):
         """Handle a single HTTP request.
 
-        改写 BaseHTTPRequestHandler.handle_one_request()
-        处理一次HTTP request
+        此方法原本是解析并分派请求到适当的do_*()方法。
+        现在覆写了 BaseHTTPRequestHandler.handle_one_request()
         """
         self.raw_requestline = self.rfile.readline()
         if not self.raw_requestline:
             self.close_connection = 1
-        elif self.parse_request():
+        elif self.parse_request():  # parse_request() 方法暂时找不到在哪实现
             return self.run_wsgi()
 
     def send_response(self, code, message=None):
         """Send the response header and log the response code.
         
-        改写 BaseHTTPRequestHandler.send_response()
+        向头缓冲区添加响应头，并记录接受的请求。
+        覆写了 BaseHTTPRequestHandler.send_response()
         """
         self.log_request(code)
         if message is None:
@@ -373,9 +384,17 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             self.wfile.write(hdr.encode('ascii'))
 
     def version_string(self):
+        """
+        覆写。
+        返回服务器软件的版本字符串。
+        """
         return BaseHTTPRequestHandler.version_string(self).strip()
 
     def address_string(self):
+        """
+        覆写。
+        返回客户端地址。
+        """
         if getattr(self, 'environ', None):
             return self.environ['REMOTE_ADDR']
         else:
@@ -384,7 +403,15 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
     def port_integer(self):
         return self.client_address[1]
 
+    ##########################################################################
+    # 以下覆写了有关log的方法
+    ##########################################################################
+
     def log_request(self, code='-', size='-'):
+        """
+        覆写 BaseHTTPRequestHandler.log_request()
+        记录接受（成功）请求。
+        """
         msg = self.requestline
         code = str(code)
 
@@ -409,9 +436,11 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         self.log('info', '"%s" %s %s', msg, code, size)
 
     def log_error(self, *args):
+        """覆写"""
         self.log('error', *args)
 
     def log_message(self, format, *args):
+        """覆写"""
         self.log('info', format, *args)
 
     def log(self, type, message, *args):
@@ -586,6 +615,7 @@ class BaseWSGIServer(HTTPServer, object):
     
     基本WSGI服务器
     继承了 HTTPServer 并覆写了一些方法
+    HTTPServer文档参见：https://yiyibooks.cn/xx/python_352/library/http.server.html
     """
     multithread = False     # 多线程
     multiprocess = False    # 多进程
@@ -595,6 +625,7 @@ class BaseWSGIServer(HTTPServer, object):
                  passthrough_errors=False, ssl_context=None, fd=None):
 
         # wsgi请求处理
+        # handler 是为 HTTPServer 提供一个 RequestHandlerClass 实例化
         if handler is None:
             handler = WSGIRequestHandler
 
@@ -640,20 +671,24 @@ class BaseWSGIServer(HTTPServer, object):
     def serve_forever(self):
         self.shutdown_signal = False
         try:
-            HTTPServer.serve_forever(self)  # 使用了 HTTPServer 启动服务
+            HTTPServer.serve_forever(self)  # 使用了 HTTPServer 启动服务，阻塞
         except KeyboardInterrupt:
             pass
         finally:
             self.server_close()
 
     def handle_error(self, request, client_address):
+        """覆写
+        如果 RequestHandlerClass 实例引发异常的 handle() 方法，则调用此函数。
+        """
         if self.passthrough_errors:
             raise
         return HTTPServer.handle_error(self, request, client_address)
 
     def get_request(self):
-        """overwrite?
-        获取请求
+        """
+        覆写 BaseServer.get_request()
+        必须接受来自套接字的请求，并返回包含要用于与客户端通信的新套接字对象和客户端地址的2元组。
         """
         con, info = self.socket.accept()
         return con, info
