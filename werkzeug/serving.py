@@ -848,6 +848,7 @@ def run_simple(hostname, port, application, use_reloader=False,
         except (LookupError, ValueError):
             fd = None
 
+        # 创建server
         # make_server return`ThreadedWSGIServer` or
         # `ForkingWSGIServer` or `BaseWSGIServer`
         srv = make_server(hostname, port, application, threaded,
