@@ -7,6 +7,9 @@
 
     :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
+
+笔记：
+    安全模块
 """
 import os
 import hmac
@@ -163,6 +166,7 @@ def _hash_internal(method, salt, password):
     unsalted and salted passwords.  In case salted passwords are used
     hmac is used.
     """
+    # 明文
     if method == 'plain':
         return password, method
 
@@ -181,7 +185,7 @@ def _hash_internal(method, salt, password):
         is_pbkdf2 = False
         actual_method = method
 
-    hash_func = _hash_funcs.get(method)
+    hash_func = _hash_funcs.get(method) # 获取hash函数
     if hash_func is None:
         raise TypeError('invalid method %r' % method)
 
