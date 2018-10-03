@@ -443,9 +443,9 @@ class SharedDataMiddleware(object):
     """A WSGI middleware that provides static content for development
     environments or simple server setups. Usage is quite simple::
 
-    一个为开发环境或单一服务配置提供静态内容的WSGI中间件
-    类似于使用nginx配置静态内容服务器？
-
+    一个为开发环境或单一服务配置提供静态内容的WSGI中间件，简单示例如下：
+    （类似于使用nginx配置静态内容服务器？）
+    
         import os
         from werkzeug.wsgi import SharedDataMiddleware
 
@@ -479,9 +479,15 @@ class SharedDataMiddleware(object):
     work but this could also be by accident.  We strongly suggest using ASCII
     only file names for static files.
 
+    当前中间件不支持非ASCII文件名。
+
+    我们强烈建议给静态文件文件名只使用ASCII。
+
     The middleware will guess the mimetype using the Python `mimetype`
     module.  If it's unable to figure out the charset it will fall back
     to `fallback_mimetype`.
+
+    这个中间件会使用Python的`mimetype`模块猜测mimetype
 
     .. versionchanged:: 0.5
        The cache timeout is configurable now.
@@ -496,6 +502,13 @@ class SharedDataMiddleware(object):
     :param fallback_mimetype: the fallback mimetype for unknown files.
     :param cache: enable or disable caching headers.
     :param cache_timeout: the cache timeout in seconds for the headers.
+
+    :param app: 需要包装的app。
+    :param exports: 一个输出的文件或文件夹的list或dict。
+    :param disallow: 一个 :func:`~fnmatch.fnmatch` 规则list
+    :param fallback_mimetype: 未知文件的fallback mimetype
+    :param cache: 是否缓存headers
+    :param cache_timeout: headers缓存超时时间
     """
 
     def __init__(self, app, exports, disallow=None, cache=True,
@@ -506,17 +519,20 @@ class SharedDataMiddleware(object):
         self.cache_timeout = cache_timeout
         if hasattr(exports, 'items'):
             exports = iteritems(exports)
+        # 遍历 exports
         for key, value in exports:
             if isinstance(value, tuple):
+                # 如果是tuple则是package
                 loader = self.get_package_loader(*value)
             elif isinstance(value, string_types):
+                # 字符串类型，不是文件就是文件夹
                 if os.path.isfile(value):
                     loader = self.get_file_loader(value)
                 else:
                     loader = self.get_directory_loader(value)
             else:
                 raise TypeError('unknown def %r' % value)
-            self.exports.append((key, loader))
+            self.exports.append((key, loader))  # 存入 self.exports
         if disallow is not None:
             from fnmatch import fnmatch
             self.is_allowed = lambda x: not fnmatch(x, disallow)
@@ -536,10 +552,15 @@ class SharedDataMiddleware(object):
             int(os.path.getsize(filename))
         )
 
+    #################################################################
+    # 加载器loader
+
     def get_file_loader(self, filename):
+        """获取文件的加载器"""
         return lambda x: (os.path.basename(filename), self._opener(filename))
 
     def get_package_loader(self, package, package_path):
+        """获取package的加载器"""
         from pkg_resources import DefaultProvider, ResourceManager, \
             get_provider
         loadtime = datetime.utcnow()
@@ -566,6 +587,7 @@ class SharedDataMiddleware(object):
         return loader
 
     def get_directory_loader(self, directory):
+        """获取文件夹的加载器"""
         def loader(path):
             if path is not None:
                 path = os.path.join(directory, path)
@@ -576,7 +598,10 @@ class SharedDataMiddleware(object):
             return None, None
         return loader
 
+    #################################################################
+
     def generate_etag(self, mtime, file_size, real_filename):
+        """生成etag"""
         if not isinstance(real_filename, bytes):
             real_filename = real_filename.encode(get_filesystem_encoding())
         return 'wzsdm-%d-%s-%s' % (
@@ -597,6 +622,7 @@ class SharedDataMiddleware(object):
         path = '/' + '/'.join(x for x in cleaned_path.split('/')
                               if x and x != '..')
         file_loader = None
+        # 遍历 self.exports
         for search_path, loader in self.exports:
             if search_path == path:
                 real_filename, file_loader = loader(None)
@@ -615,6 +641,10 @@ class SharedDataMiddleware(object):
         mime_type = guessed_type[0] or self.fallback_mimetype
         f, mtime, file_size = file_loader()
 
+        # 开始拼装headers
+        # 1 Date
+        # 2 Etag + Cache-Control + Expires OR Cache-Control
+        # 3 Content-Type + Content-Length +Last-Modified
         headers = [('Date', http_date())]
         if self.cache:
             timeout = self.cache_timeout
@@ -625,7 +655,7 @@ class SharedDataMiddleware(object):
             ]
             if not is_resource_modified(environ, etag, last_modified=mtime):
                 f.close()
-                start_response('304 Not Modified', headers)
+                start_response('304 Not Modified', headers) # 304
                 return []
             headers.append(('Expires', http_date(time() + timeout)))
         else:
@@ -636,7 +666,7 @@ class SharedDataMiddleware(object):
             ('Content-Length', str(file_size)),
             ('Last-Modified', http_date(mtime))
         ))
-        start_response('200 OK', headers)
+        start_response('200 OK', headers)   # 200
         return wrap_file(environ, f)
 
 

@@ -239,6 +239,9 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         return environ
 
     def run_wsgi(self):
+        """
+        运行wsgi
+        """
         if self.headers.get('Expect', '').lower().strip() == '100-continue':
             self.wfile.write(b'HTTP/1.1 100 Continue\r\n\r\n')
 
@@ -302,9 +305,9 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
 
         try:
             execute(self.server.app)    # execute传入server.app执行
-        except (socket.error, socket.timeout) as e:
+        except (socket.error, socket.timeout) as e: # 连接异常，连接超时异常
             self.connection_dropped(e, environ)
-        except Exception:
+        except Exception:                           # 其他异常
             if self.server.passthrough_errors:
                 raise
             from werkzeug.debug.tbtools import get_current_traceback
@@ -314,7 +317,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                 # we roll back to be able to set them again.
                 if not headers_sent:
                     del headers_set[:]
-                execute(InternalServerError())
+                execute(InternalServerError())  # 500：服务器错误
             except Exception:
                 pass
             self.server.log('error', 'Error on request:\n%s',
