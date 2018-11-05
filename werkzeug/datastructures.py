@@ -91,7 +91,17 @@ class ImmutableListMixin(object):
 
     """Makes a :class:`list` immutable.
     
-    不可变队列混合类
+    不可变队列混合类，以下方法被禁用：
+    - __delitem__
+    - __iadd__
+    - __setitem__
+    - append
+    - remove
+    - extend
+    - insert
+    - pop
+    - reverse
+    - sort
 
     .. versionadded:: 0.5
 
@@ -143,7 +153,7 @@ class ImmutableList(ImmutableListMixin, list):
 
     """An immutable :class:`list`.
 
-    不可变队列
+    不可变的队列
 
     .. versionadded:: 0.5
 
@@ -161,7 +171,14 @@ class ImmutableDictMixin(object):
 
     """Makes a :class:`dict` immutable.
 
-    不可变字典混合类
+    不可变字典混合类，以下方法被禁用：
+    - setdefault
+    - update
+    - pop
+    - popitem
+    - __setitem__
+    - __delitem__
+    - clear
 
     .. versionadded:: 0.5
 
@@ -291,6 +308,8 @@ class TypeConversionDict(dict):
     type conversions.  :class:`MultiDict` and :class:`CombinedMultiDict`
     are subclasses of this class and provide the same feature.
 
+    可以类型转换的字典
+
     .. versionadded:: 0.5
     """
 
@@ -318,12 +337,12 @@ class TypeConversionDict(dict):
         try:
             rv = self[key]
         except KeyError:
-            return default
+            return default  # 没有该key则返回默认值
         if type is not None:
             try:
                 rv = type(rv)
             except ValueError:
-                rv = default
+                rv = default    # 如果转换类型出错则设为默认值
         return rv
 
 
