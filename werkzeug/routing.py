@@ -1206,7 +1206,7 @@ class Map(object):
     and can be overridden for each rule.  Note that you have to specify all
     arguments besides the `rules` as keyword arguments!
 
-    map 类保存所有 URL 规则和一些配置参数。
+    Map 类保存所有 URL 规则和一些配置参数。
 
     :param rules: sequence of url rules for this map.
                   这个map的rul规则序列
@@ -1223,7 +1223,7 @@ class Map(object):
                        converter this will override the original one.
     :param sort_parameters: If set to `True` the url parameters are sorted.
                             See `url_encode` for more details.
-                            如果设置为 `True`，URL参数会排序
+                            如果设置为 `True`，URL参数会排序。
     :param sort_key: The sort key function for `url_encode`.
     :param encoding_errors: the error method to use for decoding
     :param host_matching: if set to `True` it enables the host matching
@@ -1322,7 +1322,7 @@ class Map(object):
         redirect exceptions raised by Werkzeug will contain the full canonical
         URL.
 
-
+        返回一个新的 :class:`MapAdapter` ，带有如何调用的详细说明的详情。
 
         If no path_info is passed to :meth:`match` it will use the default path
         info passed to bind.  While this doesn't really make sense for
@@ -1363,6 +1363,8 @@ class Map(object):
         provide it, Werkzeug will use `SERVER_NAME` and `SERVER_PORT` (or
         `HTTP_HOST` if provided) as used `server_name` with disabled subdomain
         feature.
+
+        类似于 :meth:`bind`，但你可以传递它一个WSGI环境，并且它将从字典里抓取环境信息。
 
         If `subdomain` is `None` but an environment and a server name is
         provided it will calculate the current subdomain automatically.
@@ -1630,7 +1632,7 @@ class MapAdapter(object):
         )
 
         have_match_for = set()
-        for rule in self.map._rules:    # for 循环匹配 URL 
+        for rule in self.map._rules:    # 遍历匹配 URL 
             try:
                 rv = rule.match(path, method)
             except RequestSlash:
@@ -1644,7 +1646,7 @@ class MapAdapter(object):
             if rv is None:  # 如果为空则 continue 
                 continue
             
-            # method
+            # 检查 method ，如果没有则设置 have_match_for
             if rule.methods is not None and method not in rule.methods:
                 have_match_for.update(rule.methods)
                 continue
