@@ -203,6 +203,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         path_info = url_unquote(request_url.path)
 
         # wsgienviron ，必须是Python内建的dict
+        # pep 3333: https://www.python.org/dev/peps/pep-3333/#environ-variables
         environ = {
             'wsgi.version':         (1, 0),
             'wsgi.url_scheme':      url_scheme,
@@ -257,6 +258,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                 except ValueError:
                     code, msg = status, ""
                 self.send_response(int(code), msg)
+                # 提取response header
                 header_keys = set()
                 for key, value in response_headers:
                     self.send_header(key, value)
@@ -272,13 +274,20 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                 # 检查 date 头部
                 if 'date' not in header_keys:
                     self.send_header('Date', self.date_time_string())
-                self.end_headers()
+                self.end_headers()  # self.end_headers() 不知道在哪实现
 
             assert isinstance(data, bytes), 'applications must write bytes'
             self.wfile.write(data)
             self.wfile.flush()
 
         def start_response(status, response_headers, exc_info=None):
+            """
+            The `status` argument is an HTTP "status" string like "200 OK" or "404 Not Found".
+            The `response_headers` argument is a list of `(header_name, header_value)` tuples.
+            The `exc_info` argument, if supplied, must be a Python `sys.exc_info()` tuple.
+
+            pep 3333: https://www.python.org/dev/peps/pep-3333/#the-start-response-callable
+            """
             if exc_info:
                 try:
                     if headers_sent:
@@ -292,6 +301,8 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
 
         def execute(app):
             # 创建app， 并传入 environ 和 start_response 函数
+            # pep 3333: https://www.python.org/dev/peps/pep-3333/#specification-details
+            #           https://www.python.org/dev/peps/pep-3333/#the-application-framework-side
             application_iter = app(environ, start_response)
             try:
                 for data in application_iter:
@@ -327,7 +338,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         """Handles a request ignoring dropped connections.
         
         调用 handle_one_request() 一次（如果启用持久连接，则多次）以处理传入的HTTP请求。
-        覆写了 BaseHTTPRequestHandler.handle() 
+        覆写了 BaseHTTPRequestHandler.handle()
         https://docs.python.org/3.6/library/http.server.html#http.server.BaseHTTPRequestHandler.handle_one_request
         """
         rv = None
