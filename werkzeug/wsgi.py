@@ -169,6 +169,8 @@ def get_content_length(environ):
     integer. If it's not available or chunked transfer encoding is used,
     ``None`` is returned.
 
+    从 WSGI 环境读取 content 大小，转为 integer 并返回。
+
     .. versionadded:: 0.9
 
     :param environ: the WSGI environ to fetch the content length from.
@@ -189,6 +191,8 @@ def get_input_stream(environ, safe_fallback=True):
     in the most sensible way possible. The stream returned is not the
     raw WSGI stream in most cases but one that is safe to read from
     without taking into account the content length.
+
+    从 WSGI 环境返回输入流，并把它包装进一下。
 
     If content length is not set, the stream will be empty for safety reasons.
     If the WSGI server supports chunked or infinite streams, it should set
@@ -445,7 +449,7 @@ class SharedDataMiddleware(object):
 
     一个为开发环境或单一服务配置提供静态内容的WSGI中间件，简单示例如下：
     （类似于使用nginx配置静态内容服务器？）
-    
+
         import os
         from werkzeug.wsgi import SharedDataMiddleware
 

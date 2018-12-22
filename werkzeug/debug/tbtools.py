@@ -173,6 +173,8 @@ def get_current_traceback(ignore_system_exceptions=False,
     calling this method will reraise system exceptions such as generator exit,
     system exit or others.  This behavior can be disabled by passing `False`
     to the function as first parameter.
+
+    获取当前异常信息并作为 `Traceback` 对象。
     """
     exc_type, exc_value, tb = sys.exc_info()
     if ignore_system_exceptions and exc_type in system_exceptions:

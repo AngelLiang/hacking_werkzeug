@@ -34,9 +34,10 @@
 
     :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
-
+"""
+"""
 笔记：
-    提供server的模块，主要包括
+    提供 server 的模块，主要包括:
 
     - class WSGIRequestHandler(BaseHTTPRequestHandler, object)
         WSGI请求处理对象类
@@ -53,8 +54,8 @@
 
     - def run_simple()
         服务启动函数
-
 """
+
 from __future__ import with_statement
 
 import io
@@ -176,12 +177,12 @@ class DechunkedInput(io.RawIOBase):
 class WSGIRequestHandler(BaseHTTPRequestHandler, object):
 
     """A request handler that implements WSGI dispatching.
-    
+
     BaseHTTPRequestHandler：
     - https://docs.python.org/3.6/library/http.server.html#http.server.BaseHTTPRequestHandler
     - https://yiyibooks.cn/xx/python_352/library/http.server.html
 
-    self.server：包含服务器实例。
+    self.server： 包含服务器实例。
     """
 
     @property
@@ -205,7 +206,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         environ = {
             'wsgi.version':         (1, 0),
             'wsgi.url_scheme':      url_scheme,
-            'wsgi.input':           self.rfile, # rfile：包含一个输入流，位于可选输入数据的开头。
+            'wsgi.input':           self.rfile,  # rfile：包含一个输入流，位于可选输入数据的开头。
             'wsgi.errors':          sys.stderr,
             'wsgi.multithread':     self.server.multithread,
             'wsgi.multiprocess':    self.server.multiprocess,
@@ -239,9 +240,6 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         return environ
 
     def run_wsgi(self):
-        """
-        运行wsgi
-        """
         if self.headers.get('Expect', '').lower().strip() == '100-continue':
             self.wfile.write(b'HTTP/1.1 100 Continue\r\n\r\n')
 
@@ -292,7 +290,8 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             return write
 
         def execute(app):
-            application_iter = app(environ, start_response) # create app，并传入 environ 和 start_response 函数
+            # 创建app， 并传入 environ 和 start_response 函数
+            application_iter = app(environ, start_response)
             try:
                 for data in application_iter:
                     write(data)
@@ -304,8 +303,8 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                 application_iter = None
 
         try:
-            execute(self.server.app)    # execute传入server.app执行
-        except (socket.error, socket.timeout) as e: # 连接异常，连接超时异常
+            execute(self.server.app)    # execute 传入 server.app 执行
+        except (socket.error, socket.timeout) as e:  # 连接异常，连接超时异常
             self.connection_dropped(e, environ)
         except Exception:                           # 其他异常
             if self.server.passthrough_errors:
@@ -317,7 +316,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                 # we roll back to be able to set them again.
                 if not headers_sent:
                     del headers_set[:]
-                execute(InternalServerError())  # 500：服务器错误
+                execute(InternalServerError())  # 500： 服务器错误处理
             except Exception:
                 pass
             self.server.log('error', 'Error on request:\n%s',
@@ -615,8 +614,8 @@ def select_ip_version(host, port):
 class BaseWSGIServer(HTTPServer, object):
 
     """Simple single-threaded, single-process WSGI server.
-    
-    基本WSGI服务器
+
+    基本 WSGI 服务器
     继承了 HTTPServer 并覆写了一些方法
     HTTPServer文档参见：https://yiyibooks.cn/xx/python_352/library/http.server.html
     """
@@ -689,9 +688,8 @@ class BaseWSGIServer(HTTPServer, object):
         return HTTPServer.handle_error(self, request, client_address)
 
     def get_request(self):
-        """
-        覆写 BaseServer.get_request()
-        必须接受来自套接字的请求，并返回包含要用于与客户端通信的新套接字对象和客户端地址的2元组。
+        """覆写 BaseServer.get_request()
+        必须接受来自套接字的请求，并返回包含要用于与客户端通信的新套接字对象和客户端地址的二元组。
         """
         con, info = self.socket.accept()
         return con, info
@@ -860,7 +858,7 @@ def run_simple(hostname, port, application, use_reloader=False,
                           fd=fd)
         if fd is None:
             log_startup(srv.socket)
-        srv.serve_forever() # serve_forever() is from BaseWSGIServer
+        srv.serve_forever()  # serve_forever() 继承于 BaseWSGIServer
 
     if use_reloader:
         # If we're not running already in the subprocess that is the
