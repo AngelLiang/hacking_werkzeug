@@ -23,7 +23,8 @@
 笔记：
     请求和响应分别由几个类进行处理，首先
 
-        - BaseRequest：基本请求类。
+        - BaseRequest
+          基本请求类。
 
     然后是有各种混合类：
         - AcceptMixin
@@ -31,8 +32,8 @@
         - UserAgentMixin
         - AuthorizationMixin
         - CommonRequetDescriptions
-    
-    BaseRequest类和以上混合类组合成 Request
+
+    BaseRequest 类和以上混合类组合成 Request
 
     响应类同理。
 
@@ -196,6 +197,7 @@ class BaseRequest(object):
     #: possible to use mutable structures, but this is not recommended.
     #:
     #: .. versionadded:: 0.6
+    # 用于 `args` 和 `form` 的 class 。
     parameter_storage_class = ImmutableMultiDict
 
     #: the type to be used for list values from the incoming WSGI environment.
@@ -274,6 +276,8 @@ class BaseRequest(object):
         Do not use this method for unittesting, there is a full featured client
         object (:class:`Client`) that allows to create multipart requests,
         support for cookies etc.
+
+        基于提供的 values 创建一个新的请求对象。
 
         This accepts the same options as the
         :class:`~werkzeug.test.EnvironBuilder`.
@@ -535,6 +539,8 @@ class BaseRequest(object):
         :attr:`parameter_storage_class` to a different type.  This might
         be necessary if the order of the form data is important.
 
+        表单参数，默认返回 :class:`~werkzeug.datastructures.ImmutableMultiDict`
+
         Please keep in mind that file uploads will not end up here, but instead
         in the :attr:`files` attribute.
 
@@ -549,7 +555,10 @@ class BaseRequest(object):
     @cached_property
     def values(self):
         """A :class:`werkzeug.datastructures.CombinedMultiDict` that combines
-        :attr:`args` and :attr:`form`."""
+        :attr:`args` and :attr:`form`.
+
+        同时返回 :attr:`args` 和 :attr:`form`
+        """
         args = []
         for d in self.args, self.form:
             if not isinstance(d, MultiDict):

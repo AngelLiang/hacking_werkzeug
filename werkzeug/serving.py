@@ -202,7 +202,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         url_scheme = self.server.ssl_context is None and 'http' or 'https'
         path_info = url_unquote(request_url.path)
 
-        # wsgi的环境变量
+        # wsgienviron ，必须是Python内建的dict
         environ = {
             'wsgi.version':         (1, 0),
             'wsgi.url_scheme':      url_scheme,
@@ -224,6 +224,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             'SERVER_PROTOCOL':      self.request_version
         }
 
+        # 把 headers 也加进 wsgi environ
         for key, value in self.headers.items():
             key = key.upper().replace('-', '_')
             if key not in ('CONTENT_TYPE', 'CONTENT_LENGTH'):
@@ -363,7 +364,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
     def handle_one_request(self):
         """Handle a single HTTP request.
 
-        此方法原本是解析并分派请求到适当的do_*()方法。
+        此方法原本是解析并分派请求到适当的 do_*() 方法。
         现在覆写了 BaseHTTPRequestHandler.handle_one_request()
         """
         self.raw_requestline = self.rfile.readline()
@@ -374,7 +375,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
 
     def send_response(self, code, message=None):
         """Send the response header and log the response code.
-        
+
         向头缓冲区添加响应头，并记录接受的请求。
         覆写了 BaseHTTPRequestHandler.send_response()
         """
@@ -386,15 +387,13 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             self.wfile.write(hdr.encode('ascii'))
 
     def version_string(self):
-        """
-        覆写。
+        """覆写。
         返回服务器软件的版本字符串。
         """
         return BaseHTTPRequestHandler.version_string(self).strip()
 
     def address_string(self):
-        """
-        覆写。
+        """覆写。
         返回客户端地址。
         """
         if getattr(self, 'environ', None):
@@ -790,10 +789,13 @@ def run_simple(hostname, port, application, use_reloader=False,
                         additionally to the modules.  For example configuration
                         files.
     :param reloader_interval: the interval for the reloader in seconds.
+                              重载器每秒间隔。
     :param reloader_type: the type of reloader to use.  The default is
                           auto detection.  Valid values are ``'stat'`` and
                           ``'watchdog'``. See :ref:`reloader` for more
                           information.
+                          使用的 reloader 类型，默认是自动检测。
+                          有效值包括 ``'stat'`` 和 ``'watchdog'``
     :param threaded: should the process handle each request in a separate
                      thread?
     :param processes: if greater than 1 then handle each request in a new process
@@ -829,8 +831,11 @@ def run_simple(hostname, port, application, use_reloader=False,
         application = SharedDataMiddleware(application, static_files)
 
     def log_startup(sock):
-        """
-        日志打印
+        """日志启动，需要传入 sock 对象
+        sample:
+
+            * Runing on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+
         """
         display_hostname = hostname not in ('', '*') and hostname or 'localhost'
         if ':' in display_hostname:
@@ -849,8 +854,8 @@ def run_simple(hostname, port, application, use_reloader=False,
         except (LookupError, ValueError):
             fd = None
 
-        # 创建server
-        # make_server return`ThreadedWSGIServer` or
+        # make_server
+        # return`ThreadedWSGIServer` or
         # `ForkingWSGIServer` or `BaseWSGIServer`
         srv = make_server(hostname, port, application, threaded,
                           processes, request_handler,
@@ -914,11 +919,14 @@ def main():
 
     parser = optparse.OptionParser(
         usage='Usage: %prog [options] app_module:app_object')
+    # 绑定的地址
     parser.add_option('-b', '--bind', dest='address',
                       help='The hostname:port the app should listen on.')
+    # 调试器
     parser.add_option('-d', '--debug', dest='use_debugger',
                       action='store_true', default=False,
                       help='Use Werkzeug\'s debugger.')
+    # 重载器
     parser.add_option('-r', '--reload', dest='use_reloader',
                       action='store_true', default=False,
                       help='Reload Python process if modules change.')
