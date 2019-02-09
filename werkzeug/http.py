@@ -499,6 +499,8 @@ def parse_authorization_header(value):
         auth_type = auth_type.lower()
     except ValueError:
         return
+
+    # Werkzeug 默认只能解析 basic 和 digest 的 Authorization
     if auth_type == b'basic':
         try:
             username, password = base64.b64decode(auth_info).split(b':', 1)

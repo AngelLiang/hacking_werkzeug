@@ -101,11 +101,11 @@
         - _pythonize(value)
         - parse_converter_args(argstr)
         - parse_rule(rule)
-    Rule: 
+    Rule:
         - class RuleTemplate(object)
         - class RuleTemplateFactory(RuleFactory)
         - class Rule(RuleFactory)
-    
+
         - class Subdomain(RuleFactory)
         - class Submount(RuleFactory)
     Converter:
@@ -123,7 +123,7 @@
 
 路由示例：
 
-```
+    ```
     self.url_map = Map([
         Rule('/', endpoint='new_url'),
         Rule('/<short_id>', endpoint='follow_short_link'),
@@ -138,7 +138,7 @@
             return getattr(self, 'on_' + endpoint)(request, **values)
         except HTTPException, e:
             return e
-```
+    ```
 
 """
 import difflib
@@ -160,7 +160,7 @@ from werkzeug._compat import itervalues, iteritems, to_unicode, to_bytes, \
 from werkzeug.datastructures import ImmutableDict, MultiDict
 from werkzeug.utils import cached_property
 
-# 正则表达式匹配URL
+# ### 正则表达式匹配URL ###
 # () - 标记一个子表达式的开始和结束位置。
 # ^ - 匹配输入字符串的开始位置。
 # ? - 匹配前面的子表达式零次或一次，或指明一个非贪婪限定符。
@@ -172,7 +172,7 @@ from werkzeug.utils import cached_property
 # (?:...) - 一个正则括号的不捕获版本
 # (?P<name>...) - 和正则括号相似, 但是这个组匹配到的子字符串可以通过符号组名称 name 进行访问。
 
-### 以下是构建*动态路由*的正则表达式
+# ### 以下是构建*动态路由*的正则表达式 ###
 # [^<]* - 开头0~1个尖括号的0+字符串
 _rule_re = re.compile(r'''
     (?P<static>[^<]*)                           # static rule data
@@ -567,6 +567,9 @@ class Rule(RuleFactory):
     Note that besides the rule-string all arguments *must* be keyword arguments
     in order to not break the application on Werkzeug upgrades.
 
+    Rule表示一个URL pattern。 `Rule`有一些选项可以改变它的行为方式，并传递给`Rule`
+    构造函数。
+
     `string`
         Rule strings basically are just normal URL paths with placeholders in
         the format ``<converter(arguments):name>`` where the converter and the
@@ -637,7 +640,7 @@ class Rule(RuleFactory):
         that can be build. This is useful if you have resources on a subdomain
         or folder that are not handled by the WSGI application (like static data)
 
-        这个设置为 True 则 rule 将不会匹配但会创建一个可build的URL
+        如果设置为 True ，则 rule 将不会匹配但会创建一个可构建的URL
 
     `redirect_to`
         If given this must be either a string or callable.  In case of a
@@ -755,7 +758,7 @@ class Rule(RuleFactory):
         """Bind the url to a map and create a regular expression based on
         the information from the rule itself and the defaults from the map.
 
-        绑定 URL 到 self.map ，并根据来自rule的信息创建正则规则
+        绑定 URL 到 self.map ，并根据来自 rule 的信息创建正则规则
 
         :internal:
         """
@@ -829,7 +832,7 @@ class Rule(RuleFactory):
         if not self.is_leaf:
             self._trace.append((False, '/'))
 
-        if self.build_only: # 如果只是 build ，则到这里就返回
+        if self.build_only:  # 如果只是 build ，则到这里就返回
             return
         regex = r'^%s%s$' % (
             u''.join(regex_parts),
@@ -904,7 +907,7 @@ class Rule(RuleFactory):
                 processed.add(data)
             else:   # 非动态路由
                 add(url_quote(to_bytes(data, self.map.charset), safe='/:|+'))
-        
+
         # 组合 tmp 并区分 domain 和 url 部分
         domain_part, url = (u''.join(tmp)).split(u'|', 1)
 
@@ -913,13 +916,13 @@ class Rule(RuleFactory):
             for key in processed:
                 if key in query_vars:
                     del query_vars[key]
-            
+
             # 添加 query string 到 url 后面
             if query_vars:
                 url += u'?' + url_encode(query_vars, charset=self.map.charset,
                                          sort=self.map.sort_parameters,
                                          key=self.map.sort_key)
-        # 返回 domain 和 url 
+        # 返回 domain 和 url
         return domain_part, url
 
     def provides_defaults_for(self, rule):
@@ -1206,12 +1209,14 @@ class Map(object):
     and can be overridden for each rule.  Note that you have to specify all
     arguments besides the `rules` as keyword arguments!
 
-    Map 类保存所有 URL 规则和一些配置参数。
+    Map 类保存所有 URL 规则和一些配置参数。一些配置值只存储在“Map”实例中，因为
+    这些值会影响所有规则，其他配置值只是默认值，可以为每个规则覆盖。
 
     :param rules: sequence of url rules for this map.
                   这个map的rul规则序列
     :param default_subdomain: The default subdomain for rules without a
                               subdomain defined.
+                              默认子域名
     :param charset: charset of the url. defaults to ``"utf-8"``
                     默认编码是utf-8
     :param strict_slashes: Take care of trailing slashes.
@@ -1632,7 +1637,7 @@ class MapAdapter(object):
         )
 
         have_match_for = set()
-        for rule in self.map._rules:    # 遍历匹配 URL 
+        for rule in self.map._rules:    # 遍历匹配 URL
             try:
                 rv = rule.match(path, method)
             except RequestSlash:
@@ -1642,16 +1647,16 @@ class MapAdapter(object):
             except RequestAliasRedirect as e:
                 raise RequestRedirect(self.make_alias_redirect_url(
                     path, rule.endpoint, e.matched_values, method, query_args))
-            
-            if rv is None:  # 如果为空则 continue 
+
+            if rv is None:  # 如果为空则 continue
                 continue
-            
+
             # 检查 method ，如果没有则设置 have_match_for
             if rule.methods is not None and method not in rule.methods:
                 have_match_for.update(rule.methods)
                 continue
-            
-            # redirect
+
+            # 重定向 redirect
             if self.map.redirect_defaults:
                 redirect_url = self.get_default_redirect(rule, method, rv,
                                                          query_args)
