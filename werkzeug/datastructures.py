@@ -11,12 +11,12 @@
 笔记：
     有关数据结构的源码
 
-    - class ImmutableDict：
+    - class ImmutableDict:
         不可变的字典
-    - class ImmutableMultiDict：
+    - class ImmutableMultiDict:
         不可变的多key字典
         主要用于 flask.request.args 等
-    - class ImmutableOrderedMultiDict：
+    - class ImmutableOrderedMultiDict:
         不可变的有序多key字典
 """
 import re
