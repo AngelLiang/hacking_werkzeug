@@ -470,6 +470,9 @@ class BaseRequest(object):
         is returned from this function.  This can be changed by setting
         :attr:`parameter_storage_class` to a different type.  This might
         be necessary if the order of the form data is important.
+
+        存储解析后的查询字符串，可通过字典方式获取键值。
+        如果想获取未解析的原生查询字符串，可以使用query_string属性。
         """
         return url_decode(wsgi_get_bytes(self.environ.get('QUERY_STRING', '')),
                           self.url_charset, errors=self.encoding_errors,
@@ -548,6 +551,8 @@ class BaseRequest(object):
 
             Previous to Werkzeug 0.9 this would only contain form data for POST
             and PUT requests.
+
+        表单字段值通过input标签的name属性值作为键获取。
         """
         self._load_form_data()
         return self.form
@@ -557,7 +562,8 @@ class BaseRequest(object):
         """A :class:`werkzeug.datastructures.CombinedMultiDict` that combines
         :attr:`args` and :attr:`form`.
 
-        同时返回 :attr:`args` 和 :attr:`form`
+        一个绑定了 :attr:`args` 和 :attr:`form` 的
+        :class:`werkzeug.datastructures.CombinedMultiDict`
         """
         args = []
         for d in self.args, self.form:
@@ -601,6 +607,8 @@ class BaseRequest(object):
     def headers(self):
         """The headers from the WSGI environ as immutable
         :class:`~werkzeug.datastructures.EnvironHeaders`.
+
+        一个EnvironHeaders对象，包含首部字段，可以以字典的形式操作。
         """
         return EnvironHeaders(self.environ)
 
