@@ -48,6 +48,8 @@ class cached_property(property):
 
     The class has to have a `__dict__` in order for this property to
     work.
+
+    将函数转换为惰性属性的装饰器。
     """
 
     # implementation detail: A subclass of python's builtin property
@@ -68,8 +70,10 @@ class cached_property(property):
     def __get__(self, obj, type=None):
         if obj is None:
             return self
+        # 从缓存获取数值
         value = obj.__dict__.get(self.__name__, _missing)
         if value is _missing:
+            # 缓存中没有数值则调用函数计算结果
             value = self.func(obj)
             obj.__dict__[self.__name__] = value
         return value
