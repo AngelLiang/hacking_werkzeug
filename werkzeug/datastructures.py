@@ -90,7 +90,7 @@ def native_itermethods(names):
 class ImmutableListMixin(object):
 
     """Makes a :class:`list` immutable.
-    
+
     不可变队列混合类，以下方法被禁用：
     - __delitem__
     - __iadd__
@@ -153,7 +153,7 @@ class ImmutableList(ImmutableListMixin, list):
 
     """An immutable :class:`list`.
 
-    不可变的队列
+    不可变的队列，使用 ImmutableListMixin 混入类
 
     .. versionadded:: 0.5
 
