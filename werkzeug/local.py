@@ -49,6 +49,7 @@ def release_local(local):
 
 
 class Local(object):
+    """线程本地局部变量"""
     __slots__ = ('__storage__', '__ident_func__')
 
     def __init__(self):
@@ -73,16 +74,17 @@ class Local(object):
 
     # 下面三个方法实现了属性的访问、设置和删除。
     # 注意到，内部都调用 `self.__ident_func__` 获取当前线程或者协程的 id，然后再访问对应的内部字典。
-    # 如果访问或者删除的属性不存在，会抛出 AttributeError。
+    # 如果访问或者删除的属性不存在，会抛出 `AttributeError` 。
     # 这样，外部用户看到的就是它在访问实例的属性，完全不知道字典或者多线程/协程切换的实现。
     def __getattr__(self, name):
         try:
+            # 线程/协程id作为key
             return self.__storage__[self.__ident_func__()][name]
         except KeyError:
-            raise AttributeError(name)
+            raise AttributeError(name)  # KeyError -> AttributeError
 
     def __setattr__(self, name, value):
-        ident = self.__ident_func__()
+        ident = self.__ident_func__()   # 线程/协程id作为key
         storage = self.__storage__
         try:
             storage[ident][name] = value
@@ -91,9 +93,10 @@ class Local(object):
 
     def __delattr__(self, name):
         try:
+            # 线程/协程id作为key
             del self.__storage__[self.__ident_func__()][name]
         except KeyError:
-            raise AttributeError(name)
+            raise AttributeError(name)  # KeyError -> AttributeError
 
 
 class LocalStack(object):
@@ -143,7 +146,7 @@ class LocalStack(object):
     del _get__ident_func__, _set__ident_func__
 
     def __call__(self):
-        """返回当前线程或者协程栈顶元素的代理对象"""
+        """调用时返回当前线程或者协程栈顶元素的代理对象"""
         def _lookup():
             rv = self.top
             if rv is None:
@@ -151,7 +154,7 @@ class LocalStack(object):
             return rv
         return LocalProxy(_lookup)
 
-    # 由以下代码可知，stack是使用 list 来实现的，只不过对其进行了 thread local 封装。
+    # 由以下几个的方法实现可知，`LocalStack`是使用`list`来实现的，只不过对其进行了`threadlocal`封装。
     def push(self, obj):
         """Pushes a new item to the stack"""
         rv = getattr(self._local, 'stack', None)
@@ -168,10 +171,11 @@ class LocalStack(object):
         if stack is None:
             return None
         elif len(stack) == 1:
+            # stack只剩下一个，清空并pop
             release_local(self._local)  # 释放内存
             return stack[-1]
         else:
-            return stack.pop()
+            return stack.pop()  # stack有多个元素，则pop
 
     @property
     def top(self):
