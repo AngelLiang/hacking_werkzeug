@@ -401,6 +401,7 @@ class RuleFactory(object):
     be added by subclassing `RuleFactory` and overriding `get_rules`.
 
     当你有很多复杂的 URL 体制，使用 rule 工厂模式去避免重复的任务是一个很好的主意。
+    它们中的一些是内建的，其他可以添加子类 `RuleFactory` 并重写 `get_rules` 方法。
     """
 
     def get_rules(self, map):
@@ -976,6 +977,12 @@ class Rule(RuleFactory):
 
         :internal:
         """
+        """
+        目前的实现：
+        1. 没有参数的规则放在首位，因为我们希望它们能快速的匹配，一些通用的规则通常没有参数。（例如index主页）
+        2. 更复杂的规则放在前面，所以第二个返回参数是权重个数的负长度。
+        3. 最后我们返回实际权重，进行排序。
+        """
         return bool(self.arguments), -len(self._weights), self._weights
 
     def build_compare_key(self):
@@ -1017,6 +1024,8 @@ class Rule(RuleFactory):
             self.endpoint
         )
 
+####################################################################
+# Converter
 
 class BaseConverter(object):
 
@@ -1199,6 +1208,8 @@ DEFAULT_CONVERTERS = {
     'float':            FloatConverter,
     'uuid':             UUIDConverter,
 }
+
+####################################################################
 
 
 class Map(object):
@@ -1459,7 +1470,7 @@ class Map(object):
             if not self._remap:
                 return
 
-            self._rules.sort(key=lambda x: x.match_compare_key())
+            self._rules.sort(key=lambda x: x.match_compare_key())   # 给 self._rules 排序
             for rules in itervalues(self._rules_by_endpoint):
                 rules.sort(key=lambda x: x.build_compare_key())
             self._remap = False
@@ -1683,7 +1694,7 @@ class MapAdapter(object):
                 return rule, rv
             else:
                 return rule.endpoint, rv
-        # 匹配完成之后在判断 method 异常
+        # 匹配完成之后再判断 method 异常
         if have_match_for:
             raise MethodNotAllowed(valid_methods=list(have_match_for))
         raise NotFound()
