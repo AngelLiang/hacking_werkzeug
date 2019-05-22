@@ -294,7 +294,7 @@ class SimpleCache(BaseCache):
 
     :param threshold: the maximum number of items the cache stores before
                       it starts deleting some.
-                      
+
                       最多缓存的item个数，默认500个。
 
     :param default_timeout: the default timeout that is used if no timeout is
@@ -311,6 +311,7 @@ class SimpleCache(BaseCache):
         self._threshold = threshold
 
     def _prune(self):
+        """修剪，超过阈值会把过期时间最久的数据删掉"""
         if len(self._cache) > self._threshold:
             now = time()
             toremove = []
@@ -321,6 +322,7 @@ class SimpleCache(BaseCache):
                 self._cache.pop(key, None)
 
     def _normalize_timeout(self, timeout):
+        """正常超时"""
         timeout = BaseCache._normalize_timeout(self, timeout)
         if timeout > 0:
             timeout = time() + timeout
@@ -330,13 +332,14 @@ class SimpleCache(BaseCache):
         try:
             expires, value = self._cache[key]
             if expires == 0 or expires > time():
-                return pickle.loads(value)
+                return pickle.loads(value)  # Python对象反序列化
         except (KeyError, pickle.PickleError):
             return None
 
     def set(self, key, value, timeout=None):
         expires = self._normalize_timeout(timeout)
         self._prune()
+        # 设置缓存，数据为 (过期时间， 序列化的Python对象) tuple
         self._cache[key] = (expires, pickle.dumps(value,
                                                   pickle.HIGHEST_PROTOCOL))
         return True
@@ -653,8 +656,8 @@ class RedisCache(BaseCache):
         timeout = self._normalize_timeout(timeout)
         dump = self.dump_object(value)
         return (
-            self._client.setnx(name=self.key_prefix + key, value=dump) and
-            self._client.expire(name=self.key_prefix + key, time=timeout)
+            self._client.setnx(name=self.key_prefix + key, value=dump)
+            and self._client.expire(name=self.key_prefix + key, time=timeout)
         )
 
     def set_many(self, mapping, timeout=None):
@@ -848,6 +851,7 @@ class UWSGICache(BaseCache):
         same instance as the werkzeug app, you only have to provide the name of
         the cache.
     """
+
     def __init__(self, default_timeout=300, cache=''):
         BaseCache.__init__(self, default_timeout)
 
