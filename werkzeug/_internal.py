@@ -55,6 +55,8 @@ _cookie_re = re.compile(b"""
 
 
 class _Missing(object):
+    """Werkzeug 的 Missing 类
+    """
 
     def __repr__(self):
         return 'no value'
@@ -63,6 +65,13 @@ class _Missing(object):
         return '_missing'
 
 _missing = _Missing()
+"""
+Usage:
+
+    dict.get('key', _missing)
+    if value is _missing:
+        ...
+"""
 
 
 def _get_environ(obj):

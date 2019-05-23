@@ -50,6 +50,8 @@ class cached_property(property):
     work.
 
     将函数转换为惰性属性的装饰器。
+    存放在 self.__dict__ 的字典里
+    key 为函数名称或给定的 name
     """
 
     # implementation detail: A subclass of python's builtin property
