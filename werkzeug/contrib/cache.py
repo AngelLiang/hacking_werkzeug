@@ -772,6 +772,7 @@ class FileSystemCache(BaseCache):
                     pass
 
     def clear(self):
+        """清除缓存则是删除所有文件"""
         for fname in self._list_dir():
             try:
                 os.remove(fname)
@@ -782,7 +783,7 @@ class FileSystemCache(BaseCache):
     def _get_filename(self, key):
         if isinstance(key, text_type):
             key = key.encode('utf-8')  # XXX unicode review
-        hash = md5(key).hexdigest()
+        hash = md5(key).hexdigest()  # 把key哈希一下
         return os.path.join(self._path, hash)
 
     def get(self, key):
@@ -812,6 +813,7 @@ class FileSystemCache(BaseCache):
             fd, tmp = tempfile.mkstemp(suffix=self._fs_transaction_suffix,
                                        dir=self._path)
             with os.fdopen(fd, 'wb') as f:
+                # 写入文件系统
                 pickle.dump(timeout, f, 1)
                 pickle.dump(value, f, pickle.HIGHEST_PROTOCOL)
             rename(tmp, filename)
