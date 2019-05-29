@@ -60,17 +60,23 @@
     werkzeug的缓存，主要提供：
 
     - class BaseCache(object)
-        基本缓存类
+        缓存基类
+
     - class NullCache(BaseCache)
         Null缓存
+
     - class SimpleCache(BaseCache)
         简单缓存
+
     - class MemcachedCache(BaseCache)
         Memcached缓存
+
     - class RedisCache(BaseCache)
         Redis缓存
-    - class FileSystemCache
-        文件缓存
+
+    - class FileSystemCache(BaseCache)
+        文件系统缓存
+
     - class UWSGICache(BaseCache)
         uwsgi缓存
 
