@@ -784,6 +784,7 @@ class Rule(RuleFactory):
 
     def compile(self):
         """Compiles the regular expression and stores it.
+
         编译正则规则并保存
         """
         assert self.map is not None, 'rule not bound'
@@ -976,8 +977,8 @@ class Rule(RuleFactory):
         3.  lastly we order by the actual weights.
 
         :internal:
-        """
-        """
+
+
         目前的实现：
         1. 没有参数的规则放在首位，因为我们希望它们能快速的匹配，一些通用的规则通常没有参数。（例如index主页）
         2. 更复杂的规则放在前面，所以第二个返回参数是权重个数的负长度。
@@ -1026,6 +1027,7 @@ class Rule(RuleFactory):
 
 ####################################################################
 # Converter
+
 
 class BaseConverter(object):
 
@@ -1220,16 +1222,16 @@ class Map(object):
     and can be overridden for each rule.  Note that you have to specify all
     arguments besides the `rules` as keyword arguments!
 
-    Map 类保存所有 URL 规则和一些配置参数。一些配置值只存储在“Map”实例中，因为
-    这些值会影响所有规则，其他配置值只是默认值，可以为每个规则覆盖。
+        Map 类保存所有 URL 规则和一些配置参数。一些配置值只存储在“Map”实例中，因为
+        这些值会影响所有规则，其他配置值只是默认值，可以为每个规则覆盖。
 
     :param rules: sequence of url rules for this map.
-                  这个map的rul规则序列
+                    这个map的rul规则序列
     :param default_subdomain: The default subdomain for rules without a
                               subdomain defined.
-                              默认子域名
+                            默认子域名
     :param charset: charset of the url. defaults to ``"utf-8"``
-                    默认编码是utf-8
+                        默认编码是utf-8
     :param strict_slashes: Take care of trailing slashes.
     :param redirect_defaults: This will redirect to the default rule if it
                               wasn't visited that way. This helps creating
@@ -1239,7 +1241,7 @@ class Map(object):
                        converter this will override the original one.
     :param sort_parameters: If set to `True` the url parameters are sorted.
                             See `url_encode` for more details.
-                            如果设置为 `True`，URL参数会排序。
+                                如果设置为 `True`，URL参数会排序。
     :param sort_key: The sort key function for `url_encode`.
     :param encoding_errors: the error method to use for decoding
     :param host_matching: if set to `True` it enables the host matching
@@ -1338,7 +1340,7 @@ class Map(object):
         redirect exceptions raised by Werkzeug will contain the full canonical
         URL.
 
-        返回一个新的 :class:`MapAdapter` ，带有如何调用的详细说明的详情。
+            返回一个新的 :class:`MapAdapter` ，带有如何调用的详细说明的详情。
 
         If no path_info is passed to :meth:`match` it will use the default path
         info passed to bind.  While this doesn't really make sense for
@@ -1380,7 +1382,7 @@ class Map(object):
         `HTTP_HOST` if provided) as used `server_name` with disabled subdomain
         feature.
 
-        类似于 :meth:`bind`，但你可以传递它一个WSGI环境，并且它将从字典里抓取环境信息。
+            类似于 :meth:`bind`，但你可以传递它一个WSGI环境，并且它将从字典里抓取环境信息。
 
         If `subdomain` is `None` but an environment and a server name is
         provided it will calculate the current subdomain automatically.

@@ -1123,6 +1123,9 @@ class BaseResponse(object):
         :param httponly: disallow JavaScript to access the cookie.  This is an
                          extension to the cookie standard and probably not
                          supported by all browsers.
+
+
+        设置 cookie
         """
         self.headers.add('Set-Cookie', dump_cookie(
             key,
