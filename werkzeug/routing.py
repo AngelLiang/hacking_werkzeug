@@ -267,19 +267,19 @@ def parse_rule(rule):
     do_match = _rule_re.match
     used_names = set()
     while pos < end:
-        m = do_match(rule, pos) # 创造一个 match 对象，从 pos 开始匹配
+        m = do_match(rule, pos)  # 创造一个 match 对象，从 pos 开始匹配
         if m is None:
             break
         # re.groupdict - 返回以有别名的组的别名为键、以该组截获的子串为值的字典，没有别名的组不包含在内。
         data = m.groupdict()    # 提取字段
         if data['static']:
             yield None, None, data['static']        # first return
-        variable = data['variable'] # 获取变量值
+        variable = data['variable']  # 获取变量值
         converter = data['converter'] or 'default'  # 获取转换器
         if variable in used_names:
             raise ValueError('variable name %r used twice.' % variable)
         used_names.add(variable)
-        yield converter, data['args'] or None, variable # second return
+        yield converter, data['args'] or None, variable  # second return
         pos = m.end()
     if pos < end:
         remaining = rule[pos:]

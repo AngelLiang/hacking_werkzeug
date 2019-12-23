@@ -732,6 +732,7 @@ def make_server(host=None, port=None, app=None, threaded=False, processes=1,
     """Create a new server instance that is either threaded, or forks
     or just processes one request after another.
 
+    创建服务
     创建一个新的服务器实例，线程、进程或基本的三种之一。
     """
     if threaded and processes > 1:
@@ -800,7 +801,7 @@ def run_simple(hostname, port, application, use_reloader=False,
                         additionally to the modules.  For example configuration
                         files.
     :param reloader_interval: the interval for the reloader in seconds.
-                              重载器每秒间隔。
+                              重载器的每秒间隔。
     :param reloader_type: the type of reloader to use.  The default is
                           auto detection.  Valid values are ``'stat'`` and
                           ``'watchdog'``. See :ref:`reloader` for more
@@ -843,6 +844,7 @@ def run_simple(hostname, port, application, use_reloader=False,
 
     def log_startup(sock):
         """日志启动，需要传入 sock 对象
+
         sample:
 
             * Runing on http://127.0.0.1:5000/ (Press CTRL+C to quit)
@@ -866,14 +868,13 @@ def run_simple(hostname, port, application, use_reloader=False,
             fd = None
 
         # make_server
-        # return`ThreadedWSGIServer` or
-        # `ForkingWSGIServer` or `BaseWSGIServer`
+        # return`ThreadedWSGIServer` or `ForkingWSGIServer` or `BaseWSGIServer`
         srv = make_server(hostname, port, application, threaded,
                           processes, request_handler,
                           passthrough_errors, ssl_context,
                           fd=fd)
         if fd is None:
-            log_startup(srv.socket)
+            log_startup(srv.socket)  # 打印启动日志
         srv.serve_forever()  # serve_forever() 继承于 BaseWSGIServer
 
     if use_reloader:
