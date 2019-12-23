@@ -626,8 +626,8 @@ class BaseWSGIServer(HTTPServer, object):
     """Simple single-threaded, single-process WSGI server.
 
     基本 WSGI 服务器
-    继承了 HTTPServer 并覆写了一些方法
-    HTTPServer文档参见：https://yiyibooks.cn/xx/python_352/library/http.server.html
+    继承了 HTTPServer 并覆写了一些方法。
+    HTTPServer文档参见： https://docs.python.org/3.6/library/http.server.html#module-http.server
     """
     multithread = False     # 多线程
     multiprocess = False    # 多进程
@@ -681,6 +681,7 @@ class BaseWSGIServer(HTTPServer, object):
         _log(type, message, *args)
 
     def serve_forever(self):
+        """override BaseServer.serve_forever"""
         self.shutdown_signal = False
         try:
             HTTPServer.serve_forever(self)  # 使用了 HTTPServer 启动服务，阻塞
@@ -690,15 +691,15 @@ class BaseWSGIServer(HTTPServer, object):
             self.server_close()
 
     def handle_error(self, request, client_address):
-        """覆写
+        """override
         如果 RequestHandlerClass 实例引发异常的 handle() 方法，则调用此函数。
         """
         if self.passthrough_errors:
-            raise
+            raise  # 往上抛出
         return HTTPServer.handle_error(self, request, client_address)
 
     def get_request(self):
-        """覆写 BaseServer.get_request()
+        """override BaseServer.get_request()
         必须接受来自套接字的请求，并返回包含要用于与客户端通信的新套接字对象和客户端地址的二元组。
         """
         con, info = self.socket.accept()
