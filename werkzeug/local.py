@@ -54,9 +54,9 @@ class Local(object):
 
     def __init__(self):
         """
-        数据保存在 __storage__ 中，后续访问都是对该属性的操作。
-        这里一定要用 object 来调用，因为用 self 调用的就会触发 __setattr__ 方法，
-        __setattr__ 方法里又会用 self 去赋值就又会调用 __setattr__ 方法，就变成递归了。
+        数据保存在 `__storage__` 中，后续访问都是对该属性的操作。
+        这里一定要用 object 来调用，因为用 self 调用的就会触发 `__setattr__` 方法，
+        `__setattr__` 方法里又会用 self 去赋值就又会调用 `__setattr__` 方法，就变成递归了。
         """
         object.__setattr__(self, '__storage__', {})
         object.__setattr__(self, '__ident_func__', get_ident)
@@ -73,9 +73,9 @@ class Local(object):
         self.__storage__.pop(self.__ident_func__(), None)
 
     # 下面三个方法实现了属性的访问、设置和删除。
-    # 注意到，内部都调用 `self.__ident_func__` 获取当前线程或者协程的 id，然后再访问对应的内部字典。
+    # 注意，内部都是调用 `self.__ident_func__()` 获取当前线程或者协程的 id，然后再访问对应的内部字典。
     # 如果访问或者删除的属性不存在，会抛出 `AttributeError` 。
-    # 这样，外部用户看到的就是它在访问实例的属性，完全不知道字典或者多线程/协程切换的实现。
+    # 这样，外部用户看到的就是它在访问实例的属性，完全不用知道字典或者多线程/协程切换的实现。
     def __getattr__(self, name):
         try:
             # 线程/协程id作为key
