@@ -218,6 +218,7 @@ class SecureCookie(ModificationTrackingDict):
             self['_expires'] = _date_to_unix(expires)
         result = []
         mac = hmac(self.secret_key, None, self.hash_method)
+        # 遍历本对象的 items
         for key, value in sorted(self.items()):
             result.append(('%s=%s' % (
                 url_quote_plus(key),

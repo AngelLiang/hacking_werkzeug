@@ -852,6 +852,7 @@ class BaseResponse(object):
     #:
     #: .. _`cookie`: http://browsercookielimits.squawky.net/
     max_cookie_size = 4093
+    """cookie最大为4093字节"""
 
     def __init__(self, response=None, status=None, headers=None,
                  mimetype=None, content_type=None, direct_passthrough=False):
@@ -1098,6 +1099,9 @@ class BaseResponse(object):
         # value from get_app_iter or iter_encoded.
         return _iter_encoded(self.response, self.charset)
 
+    ##########################################################################
+    # cookie
+
     def set_cookie(self, key, value='', max_age=None, expires=None,
                    path='/', domain=None, secure=False, httponly=False):
         """Sets a cookie. The parameters are the same as in the cookie `Morsel`
@@ -1148,8 +1152,12 @@ class BaseResponse(object):
                      path, the path has to be defined here.
         :param domain: if the cookie that should be deleted was limited to a
                        domain, that domain has to be defined here.
+
+        删除cookie
         """
         self.set_cookie(key, expires=0, max_age=0, path=path, domain=domain)
+
+    ##########################################################################
 
     @property
     def is_streamed(self):

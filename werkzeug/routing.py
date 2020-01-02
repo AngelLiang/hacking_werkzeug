@@ -179,7 +179,7 @@ _rule_re = re.compile(r'''
     <
     (?:
         (?P<converter>[a-zA-Z_][a-zA-Z0-9_]*)   # converter name
-        (?:\((?P<args>.*?)\))?                  # converter arguments, example: `(leangth)` ， args=length
+        (?:\((?P<args>.*?)\))?                  # converter arguments, example: `(length)` ， match: args=length
         \:                                      # variable delimiter
     )?
     (?P<variable>[a-zA-Z_][a-zA-Z0-9_]*)        # variable name
