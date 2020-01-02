@@ -251,11 +251,13 @@ def parse_rule(rule):
     in the form ``(converter, arguments, variable)``. If the converter is
     `None` it's a static url part, otherwise it's a dynamic one.
 
+    :internal:
+
+
+
     解析 rule 并作为生成器返回它。
     每一个 iteration 生成 (converter, arguments, variable) 格式的tuples。
     如果 converter 是 None，它是一个静态 url 部分，否则是一个动态。
-
-    :internal:
 
     :return: converter, args, static
         converter - 类型转换器
@@ -849,12 +851,14 @@ class Rule(RuleFactory):
         the map is doing host matching the subdomain part will be the host
         instead.
 
-        检查 rule 是否匹配所给的路径（path）。
-
         If the rule matches a dict with the converted values is returned,
         otherwise the return value is `None`.
 
         :internal:
+
+
+
+        检查 rule 是否匹配所给的路径（path）。
         """
         if not self.build_only:
             m = self._regex.search(path)
