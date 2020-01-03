@@ -754,6 +754,10 @@ class Rule(RuleFactory):
         rule in place.
 
         :internal:
+
+
+
+        重新绑定并刷新URL，当你在某处修改规则时调用。
         """
         self.bind(self.map, rebind=True)
 
@@ -761,9 +765,11 @@ class Rule(RuleFactory):
         """Bind the url to a map and create a regular expression based on
         the information from the rule itself and the defaults from the map.
 
-        绑定 URL 到 self.map ，并根据来自 rule 的信息创建正则规则
-
         :internal:
+
+
+
+        绑定 URL 到 self.map ，并根据来自 rule 的信息创建正则规则
         """
         if self.map is not None and not rebind:
             raise RuntimeError('url rule %r already bound to map %r' %
@@ -981,6 +987,7 @@ class Rule(RuleFactory):
         3.  lastly we order by the actual weights.
 
         :internal:
+
 
 
         目前的实现：
@@ -1226,14 +1233,14 @@ class Map(object):
     and can be overridden for each rule.  Note that you have to specify all
     arguments besides the `rules` as keyword arguments!
 
-        Map 类保存所有 URL 规则和一些配置参数。一些配置值只存储在“Map”实例中，因为
+        Map 类保存所有 URL 规则和一些配置参数。一些配置值只存储在 `Map` 实例中，因为
         这些值会影响所有规则，其他配置值只是默认值，可以为每个规则覆盖。
 
     :param rules: sequence of url rules for this map.
                     这个map的rul规则序列
     :param default_subdomain: The default subdomain for rules without a
                               subdomain defined.
-                            默认子域名
+                                默认子域名
     :param charset: charset of the url. defaults to ``"utf-8"``
                         默认编码是utf-8
     :param strict_slashes: Take care of trailing slashes.
@@ -1247,6 +1254,7 @@ class Map(object):
                             See `url_encode` for more details.
                                 如果设置为 `True`，URL参数会排序。
     :param sort_key: The sort key function for `url_encode`.
+                        排序键
     :param encoding_errors: the error method to use for decoding
     :param host_matching: if set to `True` it enables the host matching
                           feature and disables the subdomain one.  If
@@ -1344,8 +1352,6 @@ class Map(object):
         redirect exceptions raised by Werkzeug will contain the full canonical
         URL.
 
-            返回一个新的 :class:`MapAdapter` ，带有如何调用的详细说明的详情。
-
         If no path_info is passed to :meth:`match` it will use the default path
         info passed to bind.  While this doesn't really make sense for
         manual bind calls, it's useful if you bind a map to a WSGI
@@ -1360,6 +1366,11 @@ class Map(object):
 
         .. versionadded:: 0.8
            `query_args` can now also be a string.
+
+
+
+            返回一个新的 :class:`MapAdapter` ，带有如何调用的详细说明的详情。
+
         """
         server_name = server_name.lower()
         if self.host_matching:
@@ -1386,8 +1397,6 @@ class Map(object):
         `HTTP_HOST` if provided) as used `server_name` with disabled subdomain
         feature.
 
-            类似于 :meth:`bind`，但你可以传递它一个WSGI环境，并且它将从字典里抓取环境信息。
-
         If `subdomain` is `None` but an environment and a server name is
         provided it will calculate the current subdomain automatically.
         Example: `server_name` is ``'example.com'`` and the `SERVER_NAME`
@@ -1412,6 +1421,10 @@ class Map(object):
         :param environ: a WSGI environment.
         :param server_name: an optional server name hint (see above).
         :param subdomain: optionally the current subdomain (see above).
+
+
+
+            类似于 :meth:`bind`，但你可以传递它一个WSGI环境，并且它将从字典里抓取环境信息。
         """
         environ = _get_environ(environ)
 
@@ -1420,9 +1433,11 @@ class Map(object):
 
             if environ['wsgi.url_scheme'] == 'http' \
                     and wsgi_server_name.endswith(':80'):
+                # 普通链接
                 wsgi_server_name = wsgi_server_name[:-3]
             elif environ['wsgi.url_scheme'] == 'https' \
                     and wsgi_server_name.endswith(':443'):
+                #  安全链接
                 wsgi_server_name = wsgi_server_name[:-4]
         else:
             wsgi_server_name = environ['SERVER_NAME']
@@ -1459,7 +1474,7 @@ class Map(object):
 
         script_name = _get_wsgi_string('SCRIPT_NAME')
         path_info = _get_wsgi_string('PATH_INFO')
-        query_args = _get_wsgi_string('QUERY_STRING')
+        query_args = _get_wsgi_string('QUERY_STRING')  # 查询字符串
         return Map.bind(self, server_name, script_name,
                         subdomain, environ['wsgi.url_scheme'],
                         environ['REQUEST_METHOD'], path_info,
@@ -1490,6 +1505,10 @@ class MapAdapter(object):
 
     """Returned by :meth:`Map.bind` or :meth:`Map.bind_to_environ` and does
     the URL matching and building based on runtime information.
+
+
+    通过 :meth:`Map.bind` 或 :meth:`Map.bind_to_environ` 返回， 并基于实时信息
+    做URL绑定和构建。
     """
 
     def __init__(self, map, server_name, script_name, subdomain,
