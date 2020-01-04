@@ -1848,7 +1848,7 @@ class MapAdapter(object):
         `match` you call `build` and pass it the endpoint and a dict of
         arguments for the placeholders.
 
-        构建 URL
+            构建 URL
 
         The `build` function also accepts an argument called `force_external`
         which, if you set it to `True` will force external URLs. Per default
@@ -1875,7 +1875,7 @@ class MapAdapter(object):
         Additional values are converted to unicode and appended to the URL as
         URL querystring parameters:
 
-        额外的values会转换成unicode并附加到 URL 作为 querystring 参数。
+            额外的 values 会转换成 unicode 并附加到 URL 作为 querystring 参数。
 
         >>> urls.build("index", {'q': 'My Searchstring'})
         '/?q=My+Searchstring'
