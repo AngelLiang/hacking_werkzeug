@@ -65,6 +65,42 @@
 
     :copyright: 2007 by Armin Ronacher, Leif K-Brooks.
     :license: BSD, see LICENSE for more details.
+
+
+
+
+    class Map(object):
+
+        def is_endpoint_expecting(self, endpoint, *arguments):
+            pass
+
+        def iter_rules(self, endpoint=None):
+            pass
+
+        def add(self, rulefactory):
+            pass
+
+        def add_rule(self, rule):
+            pass
+
+        def bind(self, server_name, script_name=None, subdomain=None,
+             url_scheme='http', default_method='GET'):
+            pass
+
+        def bind_to_environ(self, environ, server_name=None, subdomain=None,
+                        calculate_subdomain=False):
+
+        def update(self):
+            pass
+
+    class MapAdapter(object):
+        def dispatch(self, view_func, path_info, method=None):
+            pass
+        def match(self, path_info, method=None):
+            pass
+        def build(self, endpoint, values=None, method=None, force_external=False):
+            pass
+
 """
 import sys
 import re
@@ -78,7 +114,7 @@ try:
 except NameError:
     from sets import Set as set
 
-
+# 规则正则式
 _rule_re = re.compile(r'''
     (?P<static>[^<]*)                           # static rule data
     <
@@ -97,6 +133,11 @@ def parse_rule(rule):
     Parse a rule and return it as generator. Each iteration yields tuples in the
     form ``(converter, arguments, variable)``. If the converter is `None` it's a
     static url part, otherwise it's a dynamic one.
+
+
+    解析规则，判断 URL 是静态路由还是动态路由。
+    解析规则并返回生成器。每一个返回迭代都是一个元组， `(converter, arguments, variable)`
+    如果 converter 为 None， 则它是一个静态 URL 部分，否则是动态的。
     """
     pos = 0
     end = len(rule)
@@ -127,6 +168,9 @@ def get_converter(map, name, args):
     """
     Create a new converter for the given arguments or raise
     exception if the converter does not exist.
+
+
+    创建一个新的转换器，对给定参数或抛出的异常，如果转换器不存在的话。
     """
     if not name in map.converters:
         raise LookupError('the converter %r does not exist' % name)
@@ -138,6 +182,9 @@ def get_converter(map, name, args):
         kwargs = {}
     return map.converters[name](map, *args, **kwargs)
 
+
+####################################################################
+# Exception
 
 class RoutingException(Exception):
     """
@@ -186,9 +233,15 @@ class ValidationError(ValueError):
     """
 
 
+####################################################################
+
+
 class RuleFactory(object):
     """
     An object that produces Rules when given a Map.
+
+
+    有点类似于抽象类，继承该类的必须实现 get_rules 方法。
     """
 
     def get_rules(self, map):
@@ -348,6 +401,7 @@ class Rule(RuleFactory):
                                        or self.rule.rstrip('/'))
 
         regex_parts = []
+        # parse_rule: 解析规则
         for converter, arguments, variable in parse_rule(rule):
             if converter is None:
                 regex_parts.append(re.escape(variable))
@@ -384,6 +438,10 @@ class Rule(RuleFactory):
 
         If the rule matches a dict with the converted values is returned,
         otherwise the return value is `None`.
+
+
+        检查规则是否匹配给定的路径。路径是一个在 "subdomain|/path(method)" 的字符串，
+        并且由 map 组装。
         """
         if not self.build_only:
             m = self._regex.search(path)
@@ -408,6 +466,7 @@ class Rule(RuleFactory):
                     except ValidationError:
                         return
                     result[str(name)] = value
+                # defaults 覆写 result 字典
                 if self.defaults is not None:
                     result.update(self.defaults)
                 return result
@@ -670,9 +729,9 @@ class Map(object):
             list of converters. If you redefine one converter this will
             override the original one.
         """
-        self._rules = []
+        self._rules = []  # 存储规则
         self._rules_by_endpoint = {}
-        self._remap = True
+        self._remap = True  # 修改标志位，True表示需要重新排序
 
         self.default_subdomain = default_subdomain
         self.charset = charset
@@ -683,6 +742,7 @@ class Map(object):
         if converters:
             self.converters.update(converters)
 
+        # 把 rules 加入 _rules
         for rulefactory in rules or ():
             self.add(rulefactory)
 
@@ -694,6 +754,9 @@ class Map(object):
         you want to wrap the builder a bit so that the current language
         code is automatically added if not provided but endpoints expect
         it.
+
+
+        迭代所有规则，并检查它的 endpoint 是否需要提供参数。
         """
         self.update()
         arguments = set(arguments)
@@ -712,14 +775,18 @@ class Map(object):
         """
         Add a new rule or factory to the map and bind it.  Requires that the
         rule is not bound to another map.
+
+
+        添加一个新rule或一个map工厂，并绑定它。需要这个rule没有绑定其他map。
         """
         for rule in rulefactory.get_rules(self):
             rule.bind(self)
-            self._rules.append(rule)
+            self._rules.append(rule)  # 加入 self._rules
             self._rules_by_endpoint.setdefault(rule.endpoint, []).append(rule)
         self._remap = True
 
     def add_rule(self, rule):
+        """已废弃"""
         from warnings import warn
         warn(DeprecationWarning('use map.add instead of map.add_rule now'))
         return self.add(rule)
@@ -728,6 +795,10 @@ class Map(object):
              url_scheme='http', default_method='GET'):
         """
         Return a new map adapter for this request.
+
+        :param server_name: str, 域名
+
+        :return: MapAdapter
         """
         if subdomain is None:
             subdomain = self.default_subdomain
@@ -776,9 +847,9 @@ class Map(object):
         in the correct order after things changed.
         """
         if self._remap:
-            self._rules.sort(lambda a, b: a.match_compare(b))
+            self._rules.sort(lambda a, b: a.match_compare(b))  # 排序
             for rules in self._rules_by_endpoint.itervalues():
-                rules.sort(lambda a, b: a.build_compare(b))
+                rules.sort(lambda a, b: a.build_compare(b))  # 排序
             self._remap = False
 
 
@@ -786,10 +857,17 @@ class MapAdapter(object):
     """
     Retured by `Map.bind` or `Map.bind_to_environ` and does the
     URL matching and building based on runtime information.
+
+
+    Map适配器，由 `Map.bind` 或 `Map.bind_to_environ` 返回。
     """
 
     def __init__(self, map, server_name, script_name, subdomain,
                  url_scheme, default_method):
+        """
+        :param server_name: str, 服务器名称，一般是域名
+        :param subdomain: str, 子域名
+        """
         self.map = map
         self.server_name = server_name
         if not script_name.endswith('/'):
@@ -827,25 +905,29 @@ class MapAdapter(object):
             path_info.lstrip('/'),
             (method or self.default_method).upper()
         )
+
+        # 每次 match 都要遍历 map._rules
         for rule in self.map._rules:
             try:
                 rv = rule.match(path)
             except RequestSlash:
                 raise RequestRedirect(str('%s://%s%s%s/%s/' % (
-                    self.url_scheme,
-                    self.subdomain and self.subdomain + '.' or '',
-                    self.server_name,
-                    self.script_name[:-1],
+                    self.url_scheme,  # url scheme
+                    self.subdomain and self.subdomain + '.' or '',  # 子域名
+                    self.server_name,  # 域名
+                    self.script_name[:-1],  # 路径
                     path_info.lstrip('/')
                 )))
             if rv is None:
                 continue
+            # 默认重定向
             if self.map.redirect_defaults:
                 for r in self.map._rules_by_endpoint[rule.endpoint]:
                     if r.provides_defaults_for(rule) and \
                        r.suitable_for(rv, method):
-                        rv.update(r.defaults)
-                        subdomain, path = r.build(rv)
+                        rv.update(r.defaults)  # 把 defaults 覆写到参数值
+                        subdomain, path = r.build(rv)  # 返回子域名和路径
+                        # 抛出重定向请求异常
                         raise RequestRedirect(str('%s://%s%s%s/%s' % (
                             self.url_scheme,
                             subdomain and subdomain + '.' or '',
@@ -853,8 +935,8 @@ class MapAdapter(object):
                             self.script_name[:-1],
                             path.lstrip('/')
                         )))
-            return rule.endpoint, rv
-        raise NotFound()
+            return rule.endpoint, rv  # 返回 endpoint 和参数
+        raise NotFound()  # 抛出 NotFound 异常
 
     def build(self, endpoint, values=None, method=None, force_external=False):
         """
@@ -862,6 +944,9 @@ class MapAdapter(object):
         reference a resource on another subdomain the hostname is added
         automatically. You can force external urls by setting
         `force_external` to `True`.
+
+
+        相对于当前这个，构建一个新的URL主机名称。
         """
         self.map.update()
         method = method or self.default_method
@@ -880,6 +965,7 @@ class MapAdapter(object):
         subdomain, path = rv
         if not force_external and subdomain == self.subdomain:
             return str(urljoin(self.script_name, path.lstrip('/')))
+        # 拼接字符串成URL
         return str('%s://%s%s%s/%s' % (
             self.url_scheme,
             subdomain and subdomain + '.' or '',
