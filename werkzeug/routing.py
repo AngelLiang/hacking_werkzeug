@@ -449,8 +449,12 @@ class Rule(RuleFactory):
         otherwise the return value is `None`.
 
 
+        rule.match
+
         检查规则是否匹配给定的路径。路径是一个在 "subdomain|/path(method)" 的字符串，
         并且由 map 组装。
+
+        如果rule使用转换器匹配了一个字典，一个值将被返回。否则返回None。
         """
         if not self.build_only:
             # re.search: 扫描整个字符串并返回第一个成功的匹配。
@@ -470,6 +474,7 @@ class Rule(RuleFactory):
                     del groups['__suffix__']
 
                 result = {}
+                # 循环处理URL中的动态参数
                 for name, value in groups.iteritems():
                     try:
                         value = self._converters[name].to_python(value)
@@ -499,6 +504,7 @@ class Rule(RuleFactory):
                 tmp.append(data)
         subdomain, url = (u''.join(tmp)).split('|', 1)
 
+        # 拼接 query string
         query_vars = {}
         for key in set(values) - processed:
             query_vars[key] = unicode(values[key])
@@ -656,8 +662,8 @@ class PathConverter(BaseConverter):
     """
     Matches a whole path (including slashes)
     """
-    regex = '[^/].*'
-    is_greedy = True
+    regex = '[^/].*'  # 匹配路径
+    is_greedy = True  # 贪婪的
 
 
 class NumberConverter(BaseConverter):
@@ -672,6 +678,7 @@ class NumberConverter(BaseConverter):
         self.max = max
 
     def to_python(self, value):
+        """转换为Python类型"""
         if (self.fixed_digits and len(value) != self.fixed_digits):
             raise ValidationError()
         value = self.num_convert(value)
@@ -681,6 +688,7 @@ class NumberConverter(BaseConverter):
         return value
 
     def to_url(self, value):
+        """转换为URL类型，用于构建URL"""
         value = self.num_convert(value)
         if self.fixed_digits:
             value = ('%%0%sd' % self.fixed_digits) % value
@@ -691,7 +699,7 @@ class IntegerConverter(NumberConverter):
     """
     Only accepts integers.
     """
-    regex = r'\d+'
+    regex = r'\d+'  # 匹配整型
     num_convert = int
 
 
@@ -699,7 +707,7 @@ class FloatConverter(NumberConverter):
     """
     Only accepts floats and integers.
     """
-    regex = r'\d+\.\d+'
+    regex = r'\d+\.\d+'  # 匹配浮点数
     num_convert = float
 
     def __init__(self, map, min=None, max=None):
@@ -908,6 +916,7 @@ class MapAdapter(object):
         don't define it anywhere you can safely ignore it.
 
 
+        MapAdapter.match
         匹配URL
         """
         self.map.update()
@@ -960,6 +969,7 @@ class MapAdapter(object):
         `force_external` to `True`.
 
 
+        MapAdapter.build
         构建URL。
         """
         self.map.update()
