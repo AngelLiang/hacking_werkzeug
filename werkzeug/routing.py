@@ -142,25 +142,29 @@ def parse_rule(rule):
     pos = 0
     end = len(rule)
     do_match = _rule_re.match
-    used_names = set()
+    used_names = set()  # 已经使用的名字集合
     while pos < end:
-        m = do_match(rule, pos)
+        # 遍历rule
+        m = do_match(rule, pos)  # return: re.MatchObject
         if m is None:
             break
         data = m.groupdict()
         if data['static']:
+            # 返回URL静态部分
             yield None, None, data['static']
         variable = data['variable']
         converter = data['converter'] or 'default'
         if variable in used_names:
             raise ValueError('variable name %r used twice.' % variable)
         used_names.add(variable)
+        # 返回URL动态部分
         yield converter, data['args'] or None, variable
-        pos = m.end()
+        pos = m.end()  # 返回匹配结束的位置
     if pos < end:
         remaining = rule[pos:]
         if '>' in remaining or '<' in remaining:
             raise ValueError('malformed url rule: %r' % rule)
+        # 返回URL剩余的部分
         yield None, None, remaining
 
 
@@ -170,6 +174,7 @@ def get_converter(map, name, args):
     exception if the converter does not exist.
 
 
+    获取转换器
     创建一个新的转换器，对给定参数或抛出的异常，如果转换器不存在的话。
     """
     if not name in map.converters:
@@ -394,6 +399,8 @@ class Rule(RuleFactory):
         self.map = map
         if self.strict_slashes is None:
             self.strict_slashes = map.strict_slashes
+
+        # 子域名
         if self.subdomain is None:
             self.subdomain = map.default_subdomain
 
@@ -404,14 +411,16 @@ class Rule(RuleFactory):
         # parse_rule: 解析规则
         for converter, arguments, variable in parse_rule(rule):
             if converter is None:
+                # 静态部分
                 regex_parts.append(re.escape(variable))
                 self._trace.append((False, variable))
             else:
+                # 动态部分
                 convobj = get_converter(map, converter, arguments)
                 regex_parts.append('(?P<%s>%s)' % (variable, convobj.regex))
                 self._converters[variable] = convobj
                 self._trace.append((True, variable))
-                self.arguments.add(str(variable))
+                self.arguments.add(str(variable))  # 添加参数
                 if convobj.is_greedy:
                     self.greediness += 1
         if not self.is_leaf:
@@ -444,6 +453,7 @@ class Rule(RuleFactory):
         并且由 map 组装。
         """
         if not self.build_only:
+            # re.search: 扫描整个字符串并返回第一个成功的匹配。
             m = self._regex.search(path)
             if m is not None:
                 groups = m.groupdict()
