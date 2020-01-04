@@ -502,6 +502,7 @@ def parse_authorization_header(value):
 
     # Werkzeug 默认只能解析 basic 和 digest 的 Authorization
     if auth_type == b'basic':
+        # 解析 basic
         try:
             username, password = base64.b64decode(auth_info).split(b':', 1)
         except Exception:
@@ -509,6 +510,7 @@ def parse_authorization_header(value):
         return Authorization('basic', {'username':  bytes_to_wsgi(username),
                                        'password': bytes_to_wsgi(password)})
     elif auth_type == b'digest':
+        # 解析 digest
         auth_map = parse_dict_header(auth_info)
         for key in 'username', 'realm', 'nonce', 'uri', 'response':
             if key not in auth_map:
