@@ -541,6 +541,9 @@ class Rule(RuleFactory):
         )
 
 
+####################################################################
+# Converter
+
 class BaseConverter(object):
     """
     Base class for all converters.
@@ -633,6 +636,9 @@ class FloatConverter(NumberConverter):
     def __init__(self, map, min=None, max=None):
         NumberConverter.__init__(self, map, 0, min, max)
 
+
+####################################################################
+# Map
 
 class Map(object):
     """
