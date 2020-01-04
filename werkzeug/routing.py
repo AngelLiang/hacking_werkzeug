@@ -896,6 +896,9 @@ class MapAdapter(object):
         known rules. If the subdomain is not given it defaults to the
         default subdomain of the map which is usally `www`. Thus if you
         don't define it anywhere you can safely ignore it.
+
+
+        匹配URL
         """
         self.map.update()
         if not isinstance(path_info, unicode):
@@ -918,6 +921,7 @@ class MapAdapter(object):
                     self.script_name[:-1],  # 路径
                     path_info.lstrip('/')
                 )))
+            # 返回没有参数，继续循环
             if rv is None:
                 continue
             # 默认重定向
@@ -946,7 +950,7 @@ class MapAdapter(object):
         `force_external` to `True`.
 
 
-        相对于当前这个，构建一个新的URL主机名称。
+        构建URL。
         """
         self.map.update()
         method = method or self.default_method
