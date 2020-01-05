@@ -877,7 +877,9 @@ class MapAdapter(object):
     URL matching and building based on runtime information.
 
 
-    Map适配器，由 `Map.bind` 或 `Map.bind_to_environ` 返回。
+    Map适配器。添加了 dispatch() 、 match() 和 build() 接口。
+
+    由 `Map.bind` 或 `Map.bind_to_environ` 返回。
     """
 
     def __init__(self, map, server_name, script_name, subdomain,
