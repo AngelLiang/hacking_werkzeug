@@ -881,7 +881,10 @@ class MapAdapter(object):
                  url_scheme, default_method):
         """
         :param server_name: str, 服务器名称，一般是域名
+        :param script_name: str, http script
         :param subdomain: str, 子域名
+        :param url_scheme: str, http scheme
+        :param default_method: str, 默认方法
         """
         self.map = map
         self.server_name = server_name
