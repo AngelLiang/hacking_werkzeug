@@ -70,26 +70,19 @@
 
 
     class Map(object):
-
         def is_endpoint_expecting(self, endpoint, *arguments):
             pass
-
         def iter_rules(self, endpoint=None):
             pass
-
         def add(self, rulefactory):
             pass
-
         def add_rule(self, rule):
             pass
-
         def bind(self, server_name, script_name=None, subdomain=None,
              url_scheme='http', default_method='GET'):
             pass
-
         def bind_to_environ(self, environ, server_name=None, subdomain=None,
                         calculate_subdomain=False):
-
         def update(self):
             pass
 
@@ -246,7 +239,7 @@ class RuleFactory(object):
     An object that produces Rules when given a Map.
 
 
-    有点类似于抽象类，继承该类的必须实现 get_rules 方法。
+    采用了工厂方法模式，该子类的方法需要根据情况来决定去实现。
     """
 
     def get_rules(self, map):
@@ -325,6 +318,7 @@ class RuleTemplateFactory(RuleFactory):
         self.context = context
 
     def get_rules(self, map):
+        """生成器"""
         for rulefactory in self.rules:
             for rule in rulefactory.get_rules(map):
                 new_defaults = subdomain = None
@@ -386,6 +380,7 @@ class Rule(RuleFactory):
         self._regex = None
 
     def get_rules(self, map):
+        """生成器"""
         yield self
 
     def bind(self, map):
