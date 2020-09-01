@@ -52,7 +52,7 @@ class DispatcherMiddleware(object):
 
         while "/" in script:
             if script in self.mounts:
-                app = self.mounts[script]
+                app = self.mounts[script]  # 获取到对应 script 的 app
                 break
 
             script, last_item = script.rsplit("/", 1)

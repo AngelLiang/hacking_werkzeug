@@ -765,6 +765,7 @@ __all__ = ["HTTPException"]
 
 
 def _find_exceptions():
+    """查找所有 exceptions 并更新到 default_exceptions 字典里"""
     for _name, obj in iteritems(globals()):
         try:
             is_http_exception = issubclass(obj, HTTPException)
@@ -772,10 +773,12 @@ def _find_exceptions():
             is_http_exception = False
         if not is_http_exception or obj.code is None:
             continue
+        # 添加进 __all__
         __all__.append(obj.__name__)
         old_obj = default_exceptions.get(obj.code, None)
         if old_obj is not None and issubclass(obj, old_obj):
             continue
+        # 更新 default_exceptions 字典
         default_exceptions[obj.code] = obj
 
 

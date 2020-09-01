@@ -781,6 +781,7 @@ class BaseWSGIServer(HTTPServer, object):
             self.server_close()
 
     def handle_error(self, request, client_address):
+        """处理错误"""
         if self.passthrough_errors:
             raise
         # Python 2 still causes a socket.error after the earlier
