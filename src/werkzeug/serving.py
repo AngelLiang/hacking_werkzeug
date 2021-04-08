@@ -832,7 +832,7 @@ def make_server(
     host=None,
     port=None,
     app=None,
-    threaded=False,
+    threaded=False,  # 参数默认不使用线程，但是Flask的传参默认是启用
     processes=1,
     request_handler=None,
     passthrough_errors=False,
@@ -845,6 +845,7 @@ def make_server(
     if threaded and processes > 1:
         raise ValueError("cannot have a multithreaded and multi process server.")
     elif threaded:
+        # Flask默认会进入到这里条件分支
         return ThreadedWSGIServer(
             host, port, app, request_handler, passthrough_errors, ssl_context, fd=fd
         )
