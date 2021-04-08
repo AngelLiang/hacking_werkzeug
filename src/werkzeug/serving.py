@@ -161,11 +161,13 @@ class DechunkedInput(io.RawIOBase):
 
 
 class WSGIRequestHandler(BaseHTTPRequestHandler, object):
+    """继承了Python内部库的BaseHTTPRequestHandler类"""
 
     """A request handler that implements WSGI dispatching."""
 
     @property
     def server_version(self):
+        """覆写"""
         from . import __version__
 
         return "Werkzeug/" + __version__
@@ -194,6 +196,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
 
         path_info = url_unquote(path_info)
 
+        # 环境变量
         environ = {
             "wsgi.version": (1, 0),
             "wsgi.url_scheme": url_scheme,
@@ -340,6 +343,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             self.server.log("error", "Error on request:\n%s", traceback.plaintext)
 
     def handle(self):
+        """覆写"""
         """Handles a request ignoring dropped connections."""
         try:
             BaseHTTPRequestHandler.handle(self)
